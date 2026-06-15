@@ -11,11 +11,11 @@ export class MicrosoftStrategy extends PassportStrategy(Strategy, 'microsoft') {
     private authService: AuthService,
   ) {
     super({
-      clientID: configService.get<string>('AZURE_CLIENT_ID'),
-      clientSecret: configService.get<string>('AZURE_CLIENT_SECRET'),
-      callbackURL: configService.get<string>('AZURE_CALLBACK_URL'),
+      clientID: configService.get<string>('AZURE_CLIENT_ID') as string,
+      clientSecret: configService.get<string>('AZURE_CLIENT_SECRET') as string,
+      callbackURL: configService.get<string>('AZURE_CALLBACK_URL') as string,
       scope: ['user.read'],
-      tenant: configService.get<string>('AZURE_TENANT_ID'),
+      tenant: configService.get<string>('AZURE_TENANT_ID') as string,
     });
   }
 

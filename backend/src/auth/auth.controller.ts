@@ -1,6 +1,6 @@
 import { Controller, Get, UseGuards, Req, Res } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { Response } from 'express';
+import type { Response } from 'express';
 import { AuthService } from './auth.service';
 
 @Controller('api/auth')
@@ -15,7 +15,7 @@ export class AuthController {
 
   @Get('microsoft/callback')
   @UseGuards(AuthGuard('microsoft'))
-  async microsoftAuthCallback(@Req() req, @Res() res: Response) {
+  async microsoftAuthCallback(@Req() req: any, @Res() res: Response) {
     const { access_token } = this.authService.login(req.user);
     
     // Redirect to frontend with token in URL (or use a secure cookie in production)
