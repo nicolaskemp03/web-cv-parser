@@ -8,6 +8,7 @@ import { Experience } from './entities/experience.entity';
 import { Education } from './entities/education.entity';
 import { Template } from './entities/template.entity';
 import { User } from './entities/user.entity';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { User } from './entities/user.entity';
       inject: [ConfigService],
     }),
     TypeOrmModule.forFeature([Candidate, Experience, Education, Template, User]),
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],
