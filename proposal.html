@@ -1,0 +1,1376 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Konexa CV Parser Web — Propuesta de Arquitectura v0.3</title>
+    <link href="https://fonts.googleapis.com/css2?family=Ubuntu:ital,wght@0,400;0,500;0,700;1,400&family=Open+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Ubuntu+Sans+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #0a1118;
+            --bg-card: #121f2b;
+            --bg-sidebar: #0e1922;
+            --primary: #47ff96;
+            --primary-glow: rgba(71, 255, 150, 0.15);
+            --primary-dim: rgba(71, 255, 150, 0.06);
+            --text-main: #f1f5f9;
+            --text-muted: #8fa0b0;
+            --accent-navy: #162b3b;
+            --border-color: rgba(71, 255, 150, 0.1);
+            --border-hover: rgba(71, 255, 150, 0.3);
+            --shadow: 0 10px 30px -10px rgba(0,0,0,0.5);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --yellow: #f4c553;
+            --yellow-glow: rgba(244, 197, 83, 0.12);
+            --blue: #6fa3ef;
+            --blue-glow: rgba(111, 163, 239, 0.12);
+            --purple: #b48eff;
+            --purple-glow: rgba(180, 142, 255, 0.12);
+            --red: #ff5e62;
+            --red-glow: rgba(255, 94, 98, 0.12);
+
+            --font-body: 'Open Sans', 'Ubuntu', sans-serif;
+            --font-heading: 'Ubuntu', 'Ubuntu Sans', sans-serif;
+            --font-mono: 'Ubuntu Sans Mono', 'Ubuntu Mono', monospace;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; scroll-behavior: smooth; }
+
+        body {
+            font-family: var(--font-body);
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            display: flex; min-height: 100vh;
+        }
+
+        ::-webkit-scrollbar { width: 7px; }
+        ::-webkit-scrollbar-track { background: var(--bg-dark); }
+        ::-webkit-scrollbar-thumb { background: var(--accent-navy); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--primary); }
+
+        /* ─── SIDEBAR ──────────────────────────────── */
+        .sidebar {
+            width: 285px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            position: fixed; top: 0; bottom: 0; left: 0;
+            display: flex; flex-direction: column; padding: 26px 16px;
+            z-index: 100; overflow-y: auto;
+        }
+
+        .logo-area { display: flex; align-items: center; gap: 11px; margin-bottom: 30px; padding: 0 8px; }
+        .logo-mark { width: 36px; height: 36px; filter: drop-shadow(0 0 6px var(--primary-glow)); }
+        .logo-label {
+            font-family: var(--font-heading); font-size: 17px; font-weight: 700; letter-spacing: -0.2px;
+            background: linear-gradient(90deg, #fff, var(--text-muted));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .logo-label span { color: var(--primary); -webkit-text-fill-color: var(--primary); }
+
+        .nav-section-label {
+            font-family: var(--font-heading); font-size: 10px; font-weight: 700; color: var(--text-muted);
+            text-transform: uppercase; letter-spacing: 1.5px;
+            padding: 0 10px; margin: 12px 0 5px;
+        }
+
+        .nav-links { list-style: none; display: flex; flex-direction: column; gap: 2px; }
+        .nav-links a {
+            display: flex; align-items: center; gap: 12px;
+            color: var(--text-muted); text-decoration: none;
+            padding: 9px 12px; border-radius: 8px;
+            font-weight: 400; font-size: 13.5px;
+            transition: var(--transition); border: 1px solid transparent;
+        }
+        .nav-links a:hover { color: var(--primary); background: rgba(71,255,150,0.03); border-color: var(--border-color); transform: translateX(3px); }
+        .nav-links a.active { color: var(--bg-dark); background: linear-gradient(135deg, var(--primary), #3ae683); font-weight: 600; box-shadow: 0 4px 14px var(--primary-glow); }
+        .nav-links a svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; flex-shrink: 0; }
+
+        .sidebar-version {
+            margin-top: auto; padding: 12px; font-size: 11px; color: var(--text-muted);
+            border-top: 1px solid rgba(255,255,255,0.05); text-align: center;
+        }
+        .sidebar-version strong { color: var(--primary); }
+
+        /* ─── CONTENT ──────────────────────────────── */
+        .content-area { margin-left: 285px; flex-grow: 1; padding: 50px 62px; max-width: 1240px; }
+
+        .page-tag {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: var(--primary-glow); color: var(--primary);
+            border: 1px solid var(--border-color);
+            padding: 5px 12px; border-radius: 30px; font-size: 12px;
+            font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 14px;
+        }
+        .page-tag::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--primary); box-shadow: 0 0 6px var(--primary); display: block; }
+
+        h1 { font-family: var(--font-heading); font-size: 36px; font-weight: 700; letter-spacing: -0.5px; line-height: 1.2; background: linear-gradient(to right, #ffffff, #8fa0b0); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 10px; }
+        .header-sub { color: var(--text-muted); font-size: 15px; margin-bottom: 40px; }
+
+        section { padding: 42px 0; border-bottom: 1px solid rgba(255,255,255,0.05); scroll-margin-top: 40px; }
+        section:last-of-type { border-bottom: none; }
+
+        h2 { font-family: var(--font-heading); font-size: 23px; font-weight: 700; margin-bottom: 20px; display: flex; align-items: center; gap: 13px; }
+        h2::before { content: ''; display: inline-block; width: 4px; height: 20px; background: var(--primary); border-radius: 4px; box-shadow: 0 0 7px var(--primary); }
+
+        h3 { font-family: var(--font-heading); font-size: 15.5px; font-weight: 700; margin-bottom: 11px; color: var(--text-main); }
+        h4 { font-family: var(--font-body); font-size: 14px; font-weight: 600; margin-bottom: 5px; color: var(--text-main); }
+
+        p { color: var(--text-muted); font-size: 14.5px; line-height: 1.65; margin-bottom: 14px; }
+        p:last-child { margin-bottom: 0; }
+        p strong { color: var(--text-main); }
+
+        code { font-family: var(--font-mono); font-size: 12px; background: rgba(255,255,255,0.05); padding: 2px 6px; border-radius: 4px; color: var(--primary); }
+
+        /* ─── GRID ─────────────────────────────────── */
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; margin-bottom: 26px; }
+        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-bottom: 26px; }
+        .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; margin-bottom: 26px; }
+
+        /* ─── CARDS ────────────────────────────────── */
+        .card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 24px; box-shadow: var(--shadow); transition: var(--transition); }
+        .card:hover { border-color: var(--border-hover); }
+        .card-green { border-color: rgba(71,255,150,0.2); }
+        .card-yellow { border-color: rgba(244,197,83,0.2); }
+        .card-blue { border-color: rgba(111,163,239,0.2); }
+        .card-purple { border-color: rgba(180,142,255,0.2); }
+
+        /* ─── CALLOUTS ─────────────────────────────── */
+        .callout { border-radius: 10px; padding: 16px 20px; margin-bottom: 18px; border-left: 3px solid var(--primary); background: var(--primary-dim); font-size: 14px; color: var(--text-muted); line-height: 1.6; }
+        .callout.yellow { border-left-color: var(--yellow); background: var(--yellow-glow); }
+        .callout.blue { border-left-color: var(--blue); background: var(--blue-glow); }
+        .callout.purple { border-left-color: var(--purple); background: var(--purple-glow); }
+        .callout.red { border-left-color: var(--red); background: var(--red-glow); }
+        .callout strong { color: var(--text-main); }
+
+        /* ─── BADGES ───────────────────────────────── */
+        .badge-group { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 10px; }
+        .badge { background: var(--accent-navy); color: var(--primary); border: 1px solid var(--border-color); border-radius: 6px; padding: 3px 9px; font-size: 12px; font-weight: 600; display: inline-block; }
+        .badge.yellow { color: var(--yellow); border-color: rgba(244,197,83,0.2); }
+        .badge.blue { color: var(--blue); border-color: rgba(111,163,239,0.2); }
+        .badge.purple { color: var(--purple); border-color: rgba(180,142,255,0.2); }
+        .badge.muted { color: var(--text-muted); }
+
+        /* ─── STEP LIST ────────────────────────────── */
+        .step-list { list-style: none; display: flex; flex-direction: column; gap: 13px; }
+        .step-item { display: flex; gap: 13px; align-items: flex-start; }
+        .step-num { background: var(--accent-navy); color: var(--primary); border: 1px solid var(--border-color); border-radius: 50%; min-width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; margin-top: 2px; flex-shrink: 0; }
+        .step-num.blue { color: var(--blue); border-color: rgba(111,163,239,0.3); }
+        .step-num.yellow { color: var(--yellow); border-color: rgba(244,197,83,0.3); }
+        .step-text h4 { font-size: 14px; font-weight: 600; margin-bottom: 3px; }
+        .step-text p { font-size: 13px; margin-bottom: 0; }
+
+        /* ─── ARCH DIAGRAM ─────────────────────────── */
+        .arch-diagram { background: rgba(5,10,15,0.8); border: 1px dashed var(--border-color); border-radius: 14px; padding: 28px; margin: 22px 0; display: flex; flex-direction: column; align-items: center; gap: 14px; }
+        .arch-row { display: flex; align-items: center; justify-content: center; gap: 12px; width: 100%; flex-wrap: wrap; }
+        .arch-node { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 9px; padding: 10px 15px; text-align: center; font-family: var(--font-heading); font-weight: 700; font-size: 12px; min-width: 120px; transition: var(--transition); line-height: 1.4; }
+        .arch-node:hover { border-color: var(--primary); transform: scale(1.03); }
+        .arch-node small { display: block; font-family: var(--font-body); font-weight: 400; font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+        .arch-node.green { border-color: rgba(71,255,150,0.3); color: var(--primary); background: var(--primary-dim); }
+        .arch-node.yellow { border-color: rgba(244,197,83,0.3); color: var(--yellow); background: var(--yellow-glow); }
+        .arch-node.blue { border-color: rgba(111,163,239,0.3); color: var(--blue); background: var(--blue-glow); }
+        .arch-node.purple { border-color: rgba(180,142,255,0.3); color: var(--purple); background: var(--purple-glow); }
+        .arch-separator { width: 100%; border-top: 1px dashed rgba(255,255,255,0.06); margin: 4px 0; }
+        .arch-arrow { color: var(--primary); font-size: 14px; }
+
+        /* ─── CODE BLOCKS ──────────────────────────── */
+        pre { background: #050a0f; border: 1px solid rgba(255,255,255,0.05); border-radius: 10px; padding: 16px; overflow-x: auto; font-family: var(--font-mono); font-size: 12.5px; line-height: 1.65; color: #d1d8e0; margin-bottom: 14px; }
+        .c-g { color: var(--primary); }
+        .c-b { color: #9ecbff; }
+        .c-r { color: #f97583; }
+        .c-d { color: #6a737d; }
+        .c-y { color: var(--yellow); }
+        .c-p { color: var(--purple); }
+
+        /* ─── TABLE ────────────────────────────────── */
+        table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 13.5px; }
+        th { text-align: left; padding: 10px 13px; border-bottom: 2px solid var(--border-color); color: var(--primary); font-weight: 600; font-family: var(--font-heading); }
+        td { padding: 12px 13px; border-bottom: 1px solid rgba(255,255,255,0.05); color: var(--text-muted); vertical-align: top; }
+        tr:hover td { color: var(--text-main); background: rgba(255,255,255,0.01); }
+
+        /* ─── FIX PILL ─────────────────────────────── */
+        .fix-pill { display: inline-flex; align-items: center; gap: 6px; background: rgba(71,255,150,0.08); border: 1px solid var(--border-color); color: var(--primary); border-radius: 20px; padding: 4px 12px; font-size: 12px; font-weight: 600; margin-top: 10px; }
+
+        /* ─── SEARCH MODE DEMO ─────────────────────── */
+        .search-demo { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 14px; overflow: hidden; }
+        .search-demo-bar { background: var(--accent-navy); padding: 10px 16px; font-size: 12px; color: var(--text-muted); font-weight: 600; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center; gap: 8px; }
+        .search-demo-bar::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--primary); box-shadow: 0 0 6px var(--primary); }
+        .search-demo-body { padding: 20px; }
+        .search-wrapper { position: relative; }
+        .search-input { width: 100%; background: #050a0f; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 11px 14px; padding-right: 130px; color: var(--text-main); font-family: var(--font-body); font-size: 14px; outline: none; transition: var(--transition); }
+        .search-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-glow); }
+        .search-mode-pill {
+            position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+            font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px;
+            transition: var(--transition); white-space: nowrap;
+        }
+        .search-mode-pill.name { background: var(--blue-glow); color: var(--blue); border: 1px solid rgba(111,163,239,0.3); }
+        .search-mode-pill.id { background: var(--yellow-glow); color: var(--yellow); border: 1px solid rgba(244,197,83,0.3); }
+        .search-mode-pill.default { background: var(--primary-dim); color: var(--primary); border: 1px solid var(--border-color); }
+        .search-results { margin-top: 14px; display: flex; flex-direction: column; gap: 6px; min-height: 60px; }
+        .search-result-item { background: var(--accent-navy); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; transition: var(--transition); cursor: pointer; }
+        .search-result-item:hover { border-color: var(--primary); }
+        .result-name { font-size: 13.5px; font-weight: 600; color: var(--text-main); }
+        .result-meta { font-size: 11.5px; color: var(--text-muted); }
+        .result-action { font-size: 11px; font-weight: 700; color: var(--primary); }
+        .search-status { font-size: 11px; color: var(--text-muted); margin-top: 8px; font-family: var(--font-mono); }
+        .search-status.loading { color: var(--yellow); }
+        .search-status.done { color: var(--primary); }
+        .search-status.id-mode { color: var(--yellow); }
+
+        /* ─── AUTH FLOW ────────────────────────────── */
+        .auth-flow { display: flex; gap: 0; border: 1px solid var(--border-color); border-radius: 12px; overflow: hidden; margin: 20px 0; }
+        .auth-actor { flex: 1; padding: 20px; text-align: center; border-right: 1px solid rgba(255,255,255,0.05); }
+        .auth-actor:last-child { border-right: none; }
+        .auth-actor-name { font-family: var(--font-heading); font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 8px; }
+        .auth-actor-name.browser { color: var(--blue); }
+        .auth-actor-name.microsoft { color: var(--yellow); }
+        .auth-actor-name.nestjs { color: var(--primary); }
+        .auth-msg { font-size: 11.5px; color: var(--text-muted); background: rgba(255,255,255,0.03); border-radius: 6px; padding: 6px 8px; margin: 4px 0; text-align: left; }
+        .auth-line { width: 100%; height: 1px; background: rgba(255,255,255,0.05); margin: 8px 0; }
+
+        /* ─── ROADMAP ──────────────────────────────── */
+        .roadmap-track { display: flex; flex-direction: column; gap: 0; position: relative; }
+        .roadmap-track::before { content: ''; position: absolute; left: 19px; top: 30px; bottom: 30px; width: 2px; background: linear-gradient(to bottom, var(--primary), rgba(71,255,150,0.1)); }
+        .phase-block { display: flex; gap: 24px; align-items: flex-start; padding-bottom: 40px; position: relative; }
+        .phase-block:last-child { padding-bottom: 0; }
+        .phase-dot { width: 40px; height: 40px; border-radius: 50%; background: var(--bg-card); border: 2px solid var(--primary); display: flex; align-items: center; justify-content: center; font-family: var(--font-heading); font-size: 14px; font-weight: 700; color: var(--primary); flex-shrink: 0; position: relative; z-index: 1; box-shadow: 0 0 15px var(--primary-glow); }
+        .phase-dot.blue { border-color: var(--blue); color: var(--blue); box-shadow: 0 0 15px var(--blue-glow); }
+        .phase-dot.yellow { border-color: var(--yellow); color: var(--yellow); box-shadow: 0 0 15px var(--yellow-glow); }
+        .phase-dot.purple { border-color: var(--purple); color: var(--purple); box-shadow: 0 0 15px var(--purple-glow); }
+        .phase-content { flex-grow: 1; }
+        .phase-header { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+        .phase-title { font-family: var(--font-heading); font-size: 17px; font-weight: 700; color: var(--text-main); }
+        .phase-eta { font-size: 12px; color: var(--text-muted); background: var(--accent-navy); padding: 3px 9px; border-radius: 20px; border: 1px solid var(--border-color); }
+
+        /* ─── COMMIT LIST ──────────────────────────── */
+        .commit-list { display: flex; flex-direction: column; gap: 10px; margin-top: 14px; }
+        .commit-item { background: #050a0f; border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 12px 16px; }
+        .commit-hash { font-family: var(--font-mono); font-size: 11px; color: var(--primary); margin-bottom: 4px; display: block; }
+        .commit-msg { font-size: 13.5px; font-weight: 600; color: var(--text-main); margin-bottom: 5px; font-family: var(--font-heading); }
+        .commit-body { font-size: 13px; color: var(--text-muted); margin-bottom: 7px; }
+        .commit-test { font-size: 12px; color: var(--text-muted); border-top: 1px solid rgba(255,255,255,0.04); padding-top: 7px; margin-top: 7px; }
+        .commit-test::before { content: '🧪 '; }
+
+        /* ─── DEPLOY MODE TABS ─────────────────────── */
+        .deploy-tabs { display: flex; gap: 0; border-radius: 10px; overflow: hidden; border: 1px solid var(--border-color); margin-bottom: 22px; }
+        .deploy-tab { flex: 1; padding: 12px 18px; text-align: center; font-family: var(--font-heading); font-size: 13px; font-weight: 700; cursor: default; }
+        .deploy-tab.primary { background: linear-gradient(135deg, var(--primary), #3ae683); color: var(--bg-dark); }
+        .deploy-tab.secondary { background: var(--bg-card); color: var(--text-muted); border-left: 1px solid var(--border-color); }
+        .deploy-tab .tag { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; display: block; margin-bottom: 2px; opacity: 0.7; }
+    </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════ SIDEBAR -->
+<div class="sidebar">
+    <div class="logo-area">
+        <svg class="logo-mark" viewBox="0 0 1441 1440" xmlns="http://www.w3.org/2000/svg">
+            <g transform="matrix(1,0,0,1,-7960,0)"><g transform="matrix(0.5625,0,0,1,4977.96,0)"><g transform="matrix(4.28492,0,0,2.41027,4292.31,-501.118)"><path d="M335.333,761.719L254.227,761.719L432.342,240.762L512.388,240.762L335.333,761.719Z" style="fill:#47ff96;"/><g transform="matrix(1.22083,0,0,1.16502,-129.45,-83.1473)"><path d="M526.599,470.886L753.586,370.463L773.048,429.245L599.342,501.308L773.417,575.588L753.586,632.018L526.599,531.594L526.599,470.886Z" style="fill:#47ff96;"/></g></g></g></g>
+        </svg>
+        <div class="logo-label">Konexa<span>_</span>Web</div>
+    </div>
+
+    <div class="nav-section-label">Diseño</div>
+    <ul class="nav-links">
+        <li><a href="#overview" class="active" onclick="setActive(this)">
+            <svg><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>Visión General</a></li>
+        <li><a href="#stack" onclick="setActive(this)">
+            <svg><rect x="2" y="3" width="20" height="14" rx="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>Stack Tecnológico</a></li>
+        <li><a href="#architecture" onclick="setActive(this)">
+            <svg><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>Arquitectura</a></li>
+        <li><a href="#auth" onclick="setActive(this)">
+            <svg><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>Auth Microsoft</a></li>
+        <li><a href="#modules" onclick="setActive(this)">
+            <svg><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>Módulos Backend</a></li>
+        <li><a href="#database" onclick="setActive(this)">
+            <svg><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></svg>Modelo de Datos</a></li>
+        <li><a href="#teamtailor" onclick="setActive(this)">
+            <svg><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>Integración Teamtailor</a></li>
+        <li><a href="#pdf" onclick="setActive(this)">
+            <svg><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>Generación de PDF</a></li>
+        <li><a href="#bugfixes" onclick="setActive(this)">
+            <svg><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>Solución a Bugs</a></li>
+        <li><a href="#deployment" onclick="setActive(this)">
+            <svg><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>Despliegue</a></li>
+    </ul>
+
+    <div class="nav-section-label">Implementación</div>
+    <ul class="nav-links">
+        <li><a href="#azure-setup" onclick="setActive(this)">
+            <svg><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>Setup Azure AD</a></li>
+        <li><a href="#roadmap" onclick="setActive(this)">
+            <svg><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>RoadMap & Git Commits</a></li>
+    </ul>
+
+    <div class="sidebar-version">Propuesta <strong>v0.3</strong> · Junio 2026</div>
+</div>
+
+<!-- ══════════════════════════════════════ CONTENT -->
+<div class="content-area">
+
+    <header>
+        <div class="page-tag">Propuesta de Arquitectura — v0.3</div>
+        <h1>Konexa CV Parser Web</h1>
+        <p class="header-sub">NestJS · React · PostgreSQL · Microsoft OAuth2 · Teamtailor · PM2 bare metal · Traefik</p>
+    </header>
+
+    <!-- ══ OVERVIEW ════════════════════════════════════ -->
+    <section id="overview">
+        <h2>Visión General</h2>
+        <p>Plataforma web interna para el equipo de reclutamiento de Konexa. Centraliza la extracción, edición y exportación de CVs en formato Konexa-branded, con acceso al ATS Teamtailor, sin depender de instalaciones locales ni de Microsoft Word. Se despliega en el servidor existente junto a los demás servicios Node.js gestionados con PM2.</p>
+
+        <div class="grid-3">
+            <div class="card card-green">
+                <h3>📄 Parsing Flexible</h3>
+                <p>Sube uno o varios CVs manualmente (PDF/DOCX) o impórtalos desde Teamtailor. Extracción con GPT-5-mini, editor interactivo y descarga del PDF Konexa-branded en el mismo flujo.</p>
+            </div>
+            <div class="card card-blue">
+                <h3>🔗 Buscador Teamtailor</h3>
+                <p>Busca candidatos por nombre o por ID con detección automática del modo. Debounce de 350ms para no saturar la API. Selecciona e importa el CV al pipeline con un solo clic.</p>
+            </div>
+            <div class="card card-purple">
+                <h3>🔐 Acceso Corporativo</h3>
+                <p>Login exclusivo con cuenta Microsoft de Konexa (OAuth2 / Azure Entra ID). Sin contraseñas independientes. API Key de OpenAI compartida, gestionada en el servidor.</p>
+            </div>
+        </div>
+
+        <div class="callout">
+            <strong>Principio central:</strong> Todo el procesamiento ocurre en el servidor — conversión de DOCX, llamadas a OpenAI, descarga de CVs desde Teamtailor y generación de PDF. El frontend es consumidor puro de la API REST. El PDF se genera bajo demanda y se entrega directamente al browser, sin guardarlo en servidor.
+        </div>
+    </section>
+
+    <!-- ══ STACK ═══════════════════════════════════════ -->
+    <section id="stack">
+        <h2>Stack Tecnológico</h2>
+
+        <div class="grid-2">
+            <div class="card">
+                <h3>🖥 Frontend — React SPA</h3>
+                <div class="badge-group">
+                    <span class="badge">React 19</span>
+                    <span class="badge">Vite</span>
+                    <span class="badge">TypeScript</span>
+                    <span class="badge">React Router v7</span>
+                    <span class="badge">TanStack Query</span>
+                    <span class="badge">React Hook Form + Zod</span>
+                    <span class="badge">Axios</span>
+                </div>
+                <p style="margin-top:14px;">SPA compilada como estáticos. NestJS los sirve directamente mediante <code>@nestjs/serve-static</code> — sin Nginx separado en bare metal. Traefik enruta el tráfico desde <code>cvparser.konexa.cl</code> al proceso PM2.</p>
+            </div>
+            <div class="card">
+                <h3>⚙️ Backend — NestJS</h3>
+                <div class="badge-group">
+                    <span class="badge">NestJS 10+</span>
+                    <span class="badge">TypeScript</span>
+                    <span class="badge">TypeORM</span>
+                    <span class="badge">Passport JWT</span>
+                    <span class="badge">passport-azure-ad</span>
+                    <span class="badge">Multer</span>
+                    <span class="badge">class-validator</span>
+                    <span class="badge">@openai/api</span>
+                    <span class="badge">Puppeteer</span>
+                </div>
+                <p style="margin-top:14px;">API REST modular. Proceso gestionado por PM2 en bare metal junto a los demás servicios Node.js del servidor. Escucha en el puerto 3001 (o el disponible). NestJS también sirve el frontend estático en rutas no-API.</p>
+            </div>
+        </div>
+
+        <div class="grid-4">
+            <div class="card">
+                <h3>🗄 Base de Datos</h3>
+                <div class="badge-group"><span class="badge">PostgreSQL</span><span class="badge">TypeORM</span></div>
+                <p style="margin-top:12px;">Servidor PostgreSQL existente. Migraciones versionadas con TypeORM garantizan evolución controlada del esquema.</p>
+            </div>
+            <div class="card">
+                <h3>📦 Conversión Word</h3>
+                <div class="badge-group"><span class="badge yellow">LibreOffice CLI</span></div>
+                <p style="margin-top:12px;">Instalado en el servidor con <code>apt install libreoffice</code>. Convierte DOCX→PDF headless sin MS Office.</p>
+            </div>
+            <div class="card">
+                <h3>☁️ Generación PDF</h3>
+                <div class="badge-group"><span class="badge">Puppeteer</span><span class="badge">Chromium</span></div>
+                <p style="margin-top:12px;">Renderiza la plantilla HTML Konexa con datos del candidato. Retorna buffer directo al browser. No se guarda en servidor.</p>
+            </div>
+            <div class="card">
+                <h3>🚦 Infra</h3>
+                <div class="badge-group"><span class="badge">PM2</span><span class="badge blue">Traefik</span></div>
+                <p style="margin-top:12px;">PM2 gestiona el proceso en bare metal (igual que los demás servicios del servidor). Traefik enruta el tráfico entrante.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ══ ARCHITECTURE ════════════════════════════════ -->
+    <section id="architecture">
+        <h2>Arquitectura del Sistema</h2>
+
+        <div class="arch-diagram">
+            <p style="font-size:11px; text-transform:uppercase; letter-spacing:1px; color:var(--primary); margin:0 0 8px; font-family:var(--font-heading); font-weight:700;">Flujo de tráfico — bare metal + Traefik</p>
+
+            <div class="arch-row">
+                <div class="arch-node blue">Browser<small>React SPA</small></div>
+                <div class="arch-arrow">➔</div>
+                <div class="arch-node yellow">Traefik (Docker)<small>cvparser.konexa.cl</small></div>
+                <div class="arch-arrow">➔</div>
+                <div class="arch-node green">NestJS (PM2)<small>host:3001</small></div>
+                <div class="arch-arrow">➔</div>
+                <div class="arch-node">PostgreSQL<small>servidor existente</small></div>
+            </div>
+
+            <div class="arch-separator"></div>
+
+            <div class="arch-row">
+                <div class="arch-node green" style="min-width:100px">NestJS</div>
+                <div class="arch-arrow">➔</div>
+                <div class="arch-node yellow" style="min-width:130px">OpenAI API<small>Files + Responses</small></div>
+                <div class="arch-arrow">➔</div>
+                <div class="arch-node blue" style="min-width:130px">Teamtailor API<small>REST v1</small></div>
+                <div class="arch-arrow">➔</div>
+                <div class="arch-node purple" style="min-width:120px">S3 Amazon<small>CVs adjuntos TT</small></div>
+            </div>
+        </div>
+
+        <div class="callout blue">
+            <strong>NestJS como servidor único:</strong> En bare metal, NestJS sirve tanto la API (<code>/api/*</code>) como los estáticos del frontend (todo lo demás) mediante <code>ServeStaticModule</code>. Traefik en Docker simplemente apunta al host en el puerto 3001 usando <code>host.docker.internal</code> (o la IP interna del servidor según la configuración de Traefik existente).
+        </div>
+
+        <div class="callout">
+            <strong>Flujo de importación desde Teamtailor:</strong> Usuario busca en la web → NestJS consulta <code>GET /v1/candidates?filter[name]=X</code> → presenta resultados → usuario selecciona → NestJS obtiene la URL del CV adjunto (S3) → lo descarga → lo procesa → OpenAI extrae el JSON → el editor abre con los datos.
+        </div>
+    </section>
+
+    <!-- ══ AUTH ════════════════════════════════════════ -->
+    <section id="auth">
+        <h2>Autenticación Microsoft OAuth2 (Azure Entra ID)</h2>
+
+        <p>Acceso restringido a cuentas del tenant de Konexa en Microsoft 365. El flujo usa <strong>OAuth2 Authorization Code + PKCE</strong>. Se usará una App Registration nueva y dedicada a este sistema.</p>
+
+        <div class="auth-flow">
+            <div class="auth-actor">
+                <div class="auth-actor-name browser">1. Browser</div>
+                <div class="auth-msg">Clic en "Entrar con Microsoft"</div>
+                <div class="auth-line"></div>
+                <div class="auth-msg">Recibe el JWT propio de Konexa</div>
+                <div class="auth-line"></div>
+                <div class="auth-msg">JWT en memoria (React Context). Axios interceptor añade <code>Bearer token</code> a cada petición</div>
+            </div>
+            <div class="auth-actor">
+                <div class="auth-actor-name microsoft">2. Microsoft Entra ID</div>
+                <div class="auth-msg">Muestra login corporativo del tenant Konexa</div>
+                <div class="auth-line"></div>
+                <div class="auth-msg">Valida la cuenta. Solo acepta emails del tenant configurado</div>
+                <div class="auth-line"></div>
+                <div class="auth-msg">Retorna <code>id_token</code> con nombre, email y <code>oid</code> (Object ID de Azure)</div>
+            </div>
+            <div class="auth-actor">
+                <div class="auth-actor-name nestjs">3. NestJS</div>
+                <div class="auth-msg"><code>GET /api/auth/microsoft</code> → redirect a MS</div>
+                <div class="auth-line"></div>
+                <div class="auth-msg"><code>GET /api/auth/microsoft/callback</code> → valida token con <code>passport-azure-ad</code>. Crea usuario en BD si es nuevo (primer login)</div>
+                <div class="auth-line"></div>
+                <div class="auth-msg">Emite JWT propio firmado con <code>JWT_SECRET</code>. Válido en cada petición posterior</div>
+            </div>
+        </div>
+
+        <div class="grid-2">
+            <div class="card card-purple">
+                <h3>Configuración necesaria en Azure</h3>
+                <p>Pasos detallados en la sección <a href="#azure-setup" style="color:var(--primary)">Setup Azure AD</a> más abajo. Resumen:</p>
+                <ul class="step-list">
+                    <li class="step-item"><div class="step-num blue">1</div><div class="step-text"><h4>Nueva App Registration</h4><p>Entra ID → App Registrations → New. Nombre: <em>"Konexa CV Parser"</em>.</p></div></li>
+                    <li class="step-item"><div class="step-num blue">2</div><div class="step-text"><h4>Redirect URI</h4><p><code>https://cvparser.konexa.cl/api/auth/microsoft/callback</code></p></div></li>
+                    <li class="step-item"><div class="step-num blue">3</div><div class="step-text"><h4>Variables al <code>.env</code></h4><p><code>AZURE_CLIENT_ID</code>, <code>AZURE_CLIENT_SECRET</code>, <code>AZURE_TENANT_ID</code>.</p></div></li>
+                </ul>
+            </div>
+            <div class="card">
+                <h3>Roles de usuario (deseable)</h3>
+                <p>La tabla <code>users</code> incluye el campo <code>role</code> desde el inicio. El guard se implementa como decorador en los controllers cuando sea necesario activarlos:</p>
+                <pre><code><span class="c-d">// Desactivado por defecto — todos son 'recruiter'
+// Se activa con un decorador cuando se requiera:</span>
+<span class="c-r">@Roles</span>(<span class="c-b">'admin'</span>)
+<span class="c-r">@Delete</span>(<span class="c-b">'/candidates/:id'</span>)
+remove(<span class="c-r">@Param</span>(<span class="c-b">'id'</span>) id: <span class="c-r">string</span>) { ... }</code></pre>
+                <div class="badge-group">
+                    <span class="badge">admin</span>
+                    <span class="badge muted">recruiter (default)</span>
+                    <span class="badge muted">viewer</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ══ MODULES ═════════════════════════════════════ -->
+    <section id="modules">
+        <h2>Módulos del Backend (NestJS)</h2>
+
+        <div class="grid-2">
+            <div class="card">
+                <h3>📁 ParserModule</h3>
+                <ul class="step-list">
+                    <li class="step-item"><div class="step-num">1</div><div class="step-text"><h4>POST /api/parser/upload</h4><p>Acepta PDF o DOCX (Multer, max 20MB). Si es DOCX invoca <code>ConverterService</code> (LibreOffice). Archivo temp en <code>/tmp</code>.</p></div></li>
+                    <li class="step-item"><div class="step-num">2</div><div class="step-text"><h4>OpenAIService.extract(file)</h4><p>Sube PDF a Files API, ejecuta <code>responses.create</code> con el prompt de instrucciones. Valida el JSON de respuesta.</p></div></li>
+                    <li class="step-item"><div class="step-num">3</div><div class="step-text"><h4>CandidatesService.create(data)</h4><p>Persiste en PostgreSQL. Retorna candidato completo al frontend. Limpia <code>/tmp</code> en try/finally.</p></div></li>
+                </ul>
+            </div>
+            <div class="card">
+                <h3>👤 CandidatesModule</h3>
+                <ul class="step-list">
+                    <li class="step-item"><div class="step-num">•</div><div class="step-text"><h4>GET /api/candidates</h4><p>Listado paginado con filtros por nombre, stack, ubicación, idioma.</p></div></li>
+                    <li class="step-item"><div class="step-num">•</div><div class="step-text"><h4>PATCH /api/candidates/:id</h4><p>Guarda ediciones del editor interactivo. Valida con DTOs.</p></div></li>
+                    <li class="step-item"><div class="step-num">•</div><div class="step-text"><h4>POST /api/candidates/:id/download-pdf</h4><p>Invoca Puppeteer. Retorna stream directo. No guarda en servidor.</p></div></li>
+                    <li class="step-item"><div class="step-num">•</div><div class="step-text"><h4>DELETE /api/candidates/:id</h4><p>Elimina candidato y relaciones en cascada.</p></div></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="grid-2">
+            <div class="card card-purple">
+                <h3>🔐 AuthModule</h3>
+                <ul class="step-list">
+                    <li class="step-item"><div class="step-num blue">•</div><div class="step-text"><h4>GET /api/auth/microsoft</h4><p>Inicia el redirect hacia Microsoft Entra ID.</p></div></li>
+                    <li class="step-item"><div class="step-num blue">•</div><div class="step-text"><h4>GET /api/auth/microsoft/callback</h4><p>Intercambia código por tokens MS. Upsert del usuario en BD. Retorna JWT propio.</p></div></li>
+                    <li class="step-item"><div class="step-num blue">•</div><div class="step-text"><h4>GET /api/auth/me</h4><p>Retorna perfil del usuario autenticado (nombre, email, rol, avatar MS).</p></div></li>
+                </ul>
+            </div>
+            <div class="card card-blue">
+                <h3>🔗 TeamtailorModule</h3>
+                <ul class="step-list">
+                    <li class="step-item"><div class="step-num blue">•</div><div class="step-text"><h4>GET /api/teamtailor/candidates</h4><p>Sin params: últimos 10. Con <code>?q=</code>: detecta automáticamente si buscar por nombre o ID. Ver sección dedicada.</p></div></li>
+                    <li class="step-item"><div class="step-num blue">•</div><div class="step-text"><h4>POST /api/teamtailor/import/:ttId</h4><p>Descarga el CV desde la URL S3 del candidato y lo pasa al <code>ParserService</code>.</p></div></li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- ══ DATABASE ════════════════════════════════════ -->
+    <section id="database">
+        <h2>Modelo de Datos — PostgreSQL</h2>
+
+        <div class="grid-2">
+            <div class="card">
+                <h3>Tabla: <span class="c-g">candidates</span></h3>
+                <pre><code>id              UUID         DEFAULT gen_random_uuid()
+nombres         TEXT         NOT NULL CHECK (length(nombres) > 0)
+apellidos       TEXT         NOT NULL CHECK (length(apellidos) > 0)
+rut             TEXT
+ubicacion       TEXT
+mail            TEXT
+numero          TEXT
+profesion       TEXT
+resumen         TEXT
+stack           TEXT[]       <span class="c-d">-- ['React', 'Node.js', ...]</span>
+idiomas         JSONB        <span class="c-d">-- {"Español":"Nativo",...}</span>
+raw_json        JSONB        <span class="c-d">-- snapshot completo para editor</span>
+template_id     UUID         REFERENCES templates(id)
+tt_candidate_id TEXT         <span class="c-d">-- ID Teamtailor (nullable)</span>
+created_by      UUID         REFERENCES users(id)
+created_at      TIMESTAMPTZ  DEFAULT now()
+updated_at      TIMESTAMPTZ  DEFAULT now()</code></pre>
+            </div>
+
+            <div class="card">
+                <h3>Tabla: <span class="c-g">experiences</span></h3>
+                <pre><code>id           UUID   DEFAULT gen_random_uuid()
+candidate_id UUID   REFERENCES candidates(id)
+               ON DELETE CASCADE
+puesto       TEXT
+empresa      TEXT
+inicio       TEXT
+termino      TEXT
+descripcion  TEXT
+orden        INT    <span class="c-d">-- para reordenar en el editor</span></code></pre>
+                <h3 style="margin-top:16px;">Tabla: <span class="c-g">education</span></h3>
+                <pre><code>id           UUID   DEFAULT gen_random_uuid()
+candidate_id UUID   REFERENCES candidates(id)
+               ON DELETE CASCADE
+titulo       TEXT
+institucion  TEXT
+anio         TEXT
+orden        INT</code></pre>
+            </div>
+        </div>
+
+        <div class="grid-2">
+            <div class="card">
+                <h3>Tabla: <span class="c-g">templates</span></h3>
+                <pre><code>id           UUID    DEFAULT gen_random_uuid()
+name         TEXT    NOT NULL UNIQUE
+html_content TEXT    NOT NULL
+is_default   BOOLEAN DEFAULT false
+created_at   TIMESTAMPTZ DEFAULT now()</code></pre>
+                <p style="margin-top:10px;">La plantilla <strong>Hunting</strong> (diseño actual Konexa) se inserta como seed en el primer <code>migration:run</code>. Migraciones futuras pueden añadir nuevas plantillas.</p>
+            </div>
+            <div class="card">
+                <h3>Tabla: <span style="color:var(--purple)">users</span></h3>
+                <pre><code>id             UUID   DEFAULT gen_random_uuid()
+email          TEXT   UNIQUE NOT NULL
+name           TEXT   NOT NULL
+ms_object_id   TEXT   UNIQUE <span class="c-d">-- Azure OID (inmutable)</span>
+role           TEXT   DEFAULT 'recruiter'
+               <span class="c-d">-- 'admin' | 'recruiter' | 'viewer'</span>
+avatar_url     TEXT
+last_login     TIMESTAMPTZ
+created_at     TIMESTAMPTZ DEFAULT now()</code></pre>
+                <div class="callout" style="margin-top:12px;">
+                    Sin <code>password_hash</code>. Toda la auth es vía Microsoft. El <code>ms_object_id</code> es el identificador único del usuario en Azure, inmutable incluso si cambia de email.
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ══ TEAMTAILOR ══════════════════════════════════ -->
+    <section id="teamtailor">
+        <h2>Integración Teamtailor — Buscador con Detección Automática de Modo</h2>
+
+        <p>
+            Teamtailor actúa únicamente como fuente de CVs. El sistema no escribe datos en TT. 
+            El buscador usa <strong>debounce de 350ms</strong> para no saturar la API, y detecta 
+            automáticamente si el usuario está buscando <strong>por nombre</strong> o <strong>por ID</strong> 
+            con un regex simple y determinista.
+        </p>
+
+        <!-- SWITCH LOGIC -->
+        <div class="card card-yellow" style="margin-bottom: 24px;">
+            <h3>🔍 Lógica de detección: nombre vs. ID</h3>
+            <p>La distinción se hace evaluando el input con el regex <code>/^(TT-?)?\d+$/i</code> antes de hacer el llamado a la API de Teamtailor:</p>
+
+            <table>
+                <thead><tr><th>Lo que escribe el usuario</th><th>¿Coincide con regex?</th><th>Modo detectado</th><th>Parámetro API de TT</th></tr></thead>
+                <tbody>
+                    <tr><td><code>Carlos</code></td><td>No</td><td>🔵 Nombre</td><td><code>filter[name]=Carlos</code></td></tr>
+                    <tr><td><code>María González</code></td><td>No</td><td>🔵 Nombre</td><td><code>filter[name]=María González</code></td></tr>
+                    <tr><td><code>4821</code></td><td>✅ Sí — solo dígitos</td><td>🟡 ID</td><td><code>filter[id]=4821</code></td></tr>
+                    <tr><td><code>TT-4821</code></td><td>✅ Sí — prefijo TT-</td><td>🟡 ID (extrae 4821)</td><td><code>filter[id]=4821</code></td></tr>
+                    <tr><td><code>TT4821</code></td><td>✅ Sí — prefijo TT</td><td>🟡 ID (extrae 4821)</td><td><code>filter[id]=4821</code></td></tr>
+                    <tr><td><code>123abc</code></td><td>No — letras mezcladas</td><td>🔵 Nombre</td><td><code>filter[name]=123abc</code></td></tr>
+                </tbody>
+            </table>
+
+            <p style="margin-top:14px;">Además, el frontend muestra un <strong>pill indicador de modo</strong> que cambia en tiempo real mientras el usuario escribe, antes incluso de que se dispare el request:</p>
+
+            <div class="grid-2" style="margin-top:14px;">
+                <pre><code><span class="c-d">// frontend: useSearchMode hook</span>
+<span class="c-r">const</span> <span class="c-g">ID_REGEX</span> = <span class="c-b">/^(TT-?)?\d+$/i</span>;
+
+<span class="c-r">function</span> <span class="c-g">detectMode</span>(q: <span class="c-r">string</span>): <span class="c-b">'default'</span>|<span class="c-b">'name'</span>|<span class="c-b">'id'</span> {
+  <span class="c-r">if</span> (!q.trim()) <span class="c-r">return</span> <span class="c-b">'default'</span>;
+  <span class="c-r">return</span> ID_REGEX.test(q.trim()) ? <span class="c-b">'id'</span> : <span class="c-b">'name'</span>;
+}
+
+<span class="c-d">// El pill cambia con cada pulsación (sin debounce).
+// El llamado a la API sí tiene debounce de 350ms.</span></code></pre>
+
+                <pre><code><span class="c-d">// backend: teamtailor.service.ts</span>
+<span class="c-r">const</span> <span class="c-g">ID_REGEX</span> = <span class="c-b">/^(TT-?)?\d+$/i</span>;
+
+<span class="c-r">async</span> <span class="c-g">searchCandidates</span>(q?: <span class="c-r">string</span>) {
+  <span class="c-r">if</span> (!q?.trim()) <span class="c-r">return</span> this.<span class="c-g">getLatest</span>(10);
+
+  <span class="c-r">const</span> trimmed = q.trim();
+  <span class="c-r">if</span> (ID_REGEX.test(trimmed)) {
+    <span class="c-r">const</span> numId = trimmed.replace(<span class="c-b">/^TT-?/i</span>, <span class="c-b">''</span>);
+    <span class="c-r">return</span> this.<span class="c-g">queryTT</span>({ <span class="c-b">'filter[id]'</span>: numId });
+  }
+  <span class="c-r">return</span> this.<span class="c-g">queryTT</span>({ <span class="c-b">'filter[name]'</span>: trimmed });
+}</code></pre>
+            </div>
+        </div>
+
+        <!-- INTERACTIVE DEMO -->
+        <div class="grid-2">
+            <div class="card">
+                <h3>Demo interactiva del buscador</h3>
+                <div class="search-demo">
+                    <div class="search-demo-bar">Teamtailor Candidate Search — Demo</div>
+                    <div class="search-demo-body">
+                        <div class="search-wrapper">
+                            <input class="search-input" type="text" id="tt-input"
+                                placeholder="Nombre o ID (ej: Carlos / 4821 / TT-4821)"
+                                oninput="handleTTSearch(this.value)">
+                            <div class="search-mode-pill default" id="mode-pill">Últimos 10</div>
+                        </div>
+                        <div class="search-results" id="tt-results">
+                            <div class="search-result-item"><div><div class="result-name">María González</div><div class="result-meta">TT-4821 · hace 2 días</div></div><div class="result-action">Importar →</div></div>
+                            <div class="search-result-item"><div><div class="result-name">Carlos Reyes</div><div class="result-meta">TT-4819 · hace 3 días</div></div><div class="result-action">Importar →</div></div>
+                            <div class="search-result-item"><div><div class="result-name">Ana Martínez</div><div class="result-meta">TT-4815 · hace 5 días</div></div><div class="result-action">Importar →</div></div>
+                        </div>
+                        <div class="search-status done" id="tt-status">Mostrando últimos 10 candidatos</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Flujo completo de importación</h3>
+                <ul class="step-list">
+                    <li class="step-item"><div class="step-num blue">1</div><div class="step-text"><h4>Sin búsqueda (estado inicial)</h4><p>Carga automática de los 10 candidatos más recientes de TT al abrir el panel.</p></div></li>
+                    <li class="step-item"><div class="step-num blue">2</div><div class="step-text"><h4>Usuario escribe</h4><p>El pill cambia de modo inmediatamente (sin delay). El timer de 350ms se resetea con cada pulsación. Al cumplirse, se llama a <code>/api/teamtailor/candidates?q=texto</code>.</p></div></li>
+                    <li class="step-item"><div class="step-num blue">3</div><div class="step-text"><h4>NestJS detecta el modo</h4><p>Regex en el backend decide si usa <code>filter[name]</code> o <code>filter[id]</code>. El API Token de TT nunca sale al browser.</p></div></li>
+                    <li class="step-item"><div class="step-num blue">4</div><div class="step-text"><h4>Usuario selecciona → Importar</h4><p><code>POST /api/teamtailor/import/:ttId</code>. NestJS obtiene el candidato con <code>include=documents</code>, extrae la URL S3, descarga el CV y lo pasa al <code>ParserService</code>. El editor abre con los datos extraídos.</p></div></li>
+                </ul>
+                <div class="callout" style="margin-top:14px;">
+                    <strong>Si el candidato en TT no tiene CV adjunto:</strong> El endpoint retorna <code>422 Unprocessable Entity</code> con el mensaje <em>"Este candidato no tiene CV adjunto en Teamtailor."</em>
+                </div>
+            </div>
+        </div>
+
+        <div class="card" style="margin-top:0;">
+            <h3>Endpoints de Teamtailor API utilizados</h3>
+            <table>
+                <thead><tr><th>Endpoint TT</th><th>Parámetros</th><th>Uso</th></tr></thead>
+                <tbody>
+                    <tr><td><code>GET /v1/candidates</code></td><td><code>sort=-created-at&page[size]=10</code></td><td>Estado inicial — últimos 10</td></tr>
+                    <tr><td><code>GET /v1/candidates</code></td><td><code>filter[name]=texto</code></td><td>Búsqueda por nombre (detección automática)</td></tr>
+                    <tr><td><code>GET /v1/candidates</code></td><td><code>filter[id]=4821</code></td><td>Búsqueda por ID numérico (detección automática)</td></tr>
+                    <tr><td><code>GET /v1/candidates/:id</code></td><td><code>include=documents</code></td><td>Obtener URL S3 del CV adjunto para descarga</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- ══ PDF ══════════════════════════════════════════ -->
+    <section id="pdf">
+        <h2>Generación de PDF — Puppeteer</h2>
+
+        <div class="callout">
+            <strong>Diseño visual inmutable:</strong> El PDF conserva exactamente el diseño actual de Konexa (dark header, sidebar verde, tech bubbles). La plantilla Hunting.html se migra sin modificaciones al motor Puppeteer. El PDF se genera bajo demanda y se entrega directamente como descarga — no se guarda en servidor.
+        </div>
+
+        <div class="grid-2">
+            <div class="card">
+                <h3>Flujo de generación</h3>
+                <ul class="step-list">
+                    <li class="step-item"><div class="step-num">1</div><div class="step-text"><h4>Solicitud de descarga</h4><p>Frontend llama a <code>POST /api/candidates/:id/download-pdf</code>. NestJS carga el candidato + plantilla de BD.</p></div></li>
+                    <li class="step-item"><div class="step-num">2</div><div class="step-text"><h4>Compilación de la plantilla</h4><p>Handlebars inyecta los datos del candidato en el <code>html_content</code> de la plantilla Hunting.</p></div></li>
+                    <li class="step-item"><div class="step-num">3</div><div class="step-text"><h4>Puppeteer renderiza</h4><p>Chromium headless carga el HTML, espera <code>networkidle0</code> (para que carguen las fuentes Ubuntu), y genera el PDF A4.</p></div></li>
+                    <li class="step-item"><div class="step-num">4</div><div class="step-text"><h4>Stream directo al browser</h4><p>NestJS retorna el buffer con <code>Content-Disposition: attachment; filename="Juan_Perez_CV.pdf"</code>. Browser descarga directamente. Ningún archivo queda en el servidor.</p></div></li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <h3>pdf.service.ts</h3>
+                <pre><code><span class="c-r">async</span> <span class="c-g">generatePdf</span>(id: <span class="c-r">string</span>): Promise&lt;Buffer&gt; {
+  <span class="c-r">const</span> candidate = <span class="c-r">await</span> this.repo.findOneOrFail({
+    where: { id }, relations: [<span class="c-b">'template'</span>]
+  });
+
+  <span class="c-r">const</span> html = Handlebars.compile(
+    candidate.template.html_content
+  )(candidate.raw_json);
+
+  <span class="c-r">const</span> browser = <span class="c-r">await</span> puppeteer.launch({
+    executablePath: <span class="c-b">'/usr/bin/chromium-browser'</span>,
+    args: [<span class="c-b">'--no-sandbox'</span>, <span class="c-b">'--disable-setuid-sandbox'</span>]
+  });
+  <span class="c-r">const</span> page = <span class="c-r">await</span> browser.newPage();
+  <span class="c-r">await</span> page.setContent(html, { waitUntil: <span class="c-b">'networkidle0'</span> });
+  <span class="c-r">const</span> pdf = <span class="c-r">await</span> page.pdf({
+    format: <span class="c-b">'A4'</span>,
+    printBackground: <span class="c-r">true</span>,
+    margin: { top: <span class="c-b">'18mm'</span>, right: <span class="c-b">'18mm'</span>,
+              bottom: <span class="c-b">'18mm'</span>, left: <span class="c-b">'18mm'</span> }
+  });
+  <span class="c-r">await</span> browser.close();
+  <span class="c-r">return</span> pdf; <span class="c-d">// Buffer → stream al frontend</span>
+}</code></pre>
+                <p>El path de Chromium (<code>/usr/bin/chromium-browser</code>) puede parametrizarse en <code>.env</code> con <code>CHROMIUM_PATH</code> para adaptarse al servidor.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ══ BUGFIXES ════════════════════════════════════ -->
+    <section id="bugfixes">
+        <h2>Soluciones a las 4 Vulnerabilidades Identificadas</h2>
+
+        <div class="grid-2">
+            <div class="card">
+                <h3>✅ IndexError en nombre de archivo</h3>
+                <p><strong>Causa:</strong> <code>nombres.split()[0]</code> crash con nombres vacíos.</p>
+                <pre><code><span class="c-r">function</span> <span class="c-g">buildFilename</span>(bio: BioDto): <span class="c-r">string</span> {
+  <span class="c-r">const</span> fn = bio.nombres?.split(<span class="c-b">' '</span>)[0] ?? <span class="c-b">'Candidato'</span>;
+  <span class="c-r">const</span> ln = bio.apellidos?.split(<span class="c-b">' '</span>)[0] ?? <span class="c-b">'Konexa'</span>;
+  <span class="c-r">return</span> <span class="c-b">`${fn}_${ln}_CV.pdf`</span>;
+}</code></pre>
+                <p>Además el DTO marca <code>@MinLength(1)</code> en ambos campos antes de persistir, impidiendo guardar candidatos sin nombre.</p>
+                <span class="fix-pill">✓ Fallback seguro + validación en DTO</span>
+            </div>
+
+            <div class="card">
+                <h3>✅ Dependencia de Microsoft Word</h3>
+                <p><strong>Causa:</strong> <code>docx2pdf</code> requiere MS Word instalado localmente.</p>
+                <pre><code><span class="c-r">async</span> <span class="c-g">docxToPdf</span>(inputPath: <span class="c-r">string</span>): Promise&lt;<span class="c-r">string</span>&gt; {
+  <span class="c-r">const</span> outDir = path.dirname(inputPath);
+  <span class="c-r">await</span> execAsync(
+    <span class="c-b">`libreoffice --headless --convert-to pdf \
+      --outdir "${outDir}" "${inputPath}"`</span>
+  );
+  <span class="c-r">return</span> inputPath.replace(<span class="c-b">/\.docx$/i</span>, <span class="c-b">'.pdf'</span>);
+}</code></pre>
+                <p>LibreOffice instalado en el servidor como paquete del sistema. Ningún usuario necesita tener Office en su computador.</p>
+                <span class="fix-pill">✓ LibreOffice headless en el servidor</span>
+            </div>
+        </div>
+
+        <div class="grid-2">
+            <div class="card">
+                <h3>✅ Colisión de hilos / bloqueo de GUI</h3>
+                <p><strong>Causa:</strong> Múltiples hilos de Tkinter competían por <code>grab_set()</code>, bloqueando la GUI.</p>
+                <p>Node.js es single-thread con event loop. <strong>No hay hilos de UI.</strong> Los parsings simultáneos son promesas concurrentes controladas:</p>
+                <pre><code><span class="c-r">async</span> <span class="c-g">parseMultiple</span>(files: Express.Multer.File[]) {
+  <span class="c-r">return</span> Promise.allSettled(
+    files.map(f => this.<span class="c-g">parseSingle</span>(f))
+  );
+  <span class="c-d">// Errores por archivo son aislados.
+  // Un CV mal procesado no afecta a los demás.</span>
+}</code></pre>
+                <span class="fix-pill">✓ Eliminado por modelo asíncrono de Node.js</span>
+            </div>
+
+            <div class="card">
+                <h3>✅ API Keys en texto plano</h3>
+                <p><strong>Causa:</strong> Claves de OpenAI guardadas como JSON sin cifrar en el disco del usuario.</p>
+                <pre><code><span class="c-d"># .env del servidor (gitignored, chmod 600)</span>
+<span class="c-g">OPENAI_API_KEY</span>=<span class="c-b">sk-proj-...</span>
+<span class="c-g">AZURE_CLIENT_ID</span>=<span class="c-b">xxxxxxxx-xxxx-...</span>
+<span class="c-g">AZURE_CLIENT_SECRET</span>=<span class="c-b">xxxxxxxxxxxxxxxxx</span>
+<span class="c-g">AZURE_TENANT_ID</span>=<span class="c-b">xxxxxxxx-xxxx-...</span>
+<span class="c-g">TEAMTAILOR_API_TOKEN</span>=<span class="c-b">Bearer XXXX...</span>
+<span class="c-g">DATABASE_URL</span>=<span class="c-b">postgresql://user:pass@host/db</span>
+<span class="c-g">JWT_SECRET</span>=<span class="c-b">generated-random-256-bit-string</span>
+<span class="c-g">CHROMIUM_PATH</span>=<span class="c-b">/usr/bin/chromium-browser</span></code></pre>
+                <p>Solo el administrador del servidor tiene acceso al <code>.env</code>. Ningún usuario de la aplicación ve ni gestiona credenciales.</p>
+                <span class="fix-pill">✓ Variables de entorno del servidor (chmod 600)</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- ══ DEPLOYMENT ══════════════════════════════════ -->
+    <section id="deployment">
+        <h2>Despliegue</h2>
+
+        <div class="deploy-tabs">
+            <div class="deploy-tab primary">
+                <span class="tag">Modo oficial</span>
+                PM2 en Bare Metal
+            </div>
+            <div class="deploy-tab secondary">
+                <span class="tag">Opción alternativa</span>
+                Docker Compose
+            </div>
+        </div>
+
+        <div class="callout">
+            <strong>Modo oficial:</strong> El servicio corre directamente en el servidor con PM2, igual que los demás servicios Node.js existentes. Traefik (que ya está en Docker) enruta el tráfico externo al proceso PM2 en el host. Docker queda como alternativa documentada para quienes quieran contenedores.
+        </div>
+
+        <div class="grid-2">
+            <div class="card card-green">
+                <h3>Preparación del servidor (una sola vez)</h3>
+                <pre><code><span class="c-d"># 1. Node.js 20 LTS (si no está instalado)</span>
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+sudo apt-get install -y nodejs
+
+<span class="c-d"># 2. PM2 global</span>
+npm install -g pm2
+
+<span class="c-d"># 3. LibreOffice (conversión DOCX)</span>
+sudo apt-get install -y libreoffice
+
+<span class="c-d"># 4. Chromium (generación de PDF)</span>
+sudo apt-get install -y chromium-browser
+
+<span class="c-d"># 5. Verificar instalaciones</span>
+node -v && pm2 -v
+libreoffice --version
+chromium-browser --version</code></pre>
+            </div>
+
+            <div class="card">
+                <h3>Primer despliegue</h3>
+                <pre><code><span class="c-d"># Clonar repositorio</span>
+git clone https://github.com/konexa/cv-parser /opt/konexa-cv
+cd /opt/konexa-cv
+
+<span class="c-d"># Configurar entorno</span>
+cp .env.example .env
+nano .env  <span class="c-d"># rellenar credenciales</span>
+chmod 600 .env
+
+<span class="c-d"># Instalar dependencias y compilar</span>
+npm install --prefix backend
+npm run --prefix backend build
+
+<span class="c-d"># Compilar frontend y copiar a public/</span>
+npm install --prefix frontend
+npm run --prefix frontend build
+
+<span class="c-d"># Aplicar migraciones y seed</span>
+npm run --prefix backend migration:run
+npm run --prefix backend seed
+
+<span class="c-d"># Iniciar con PM2</span>
+pm2 start ecosystem.config.js
+pm2 save          <span class="c-d"># persistir al reinicio del servidor</span>
+pm2 startup       <span class="c-d"># habilitar autoarranque</span></code></pre>
+            </div>
+        </div>
+
+        <div class="grid-2">
+            <div class="card">
+                <h3>ecosystem.config.js</h3>
+                <pre><code>module.exports = {
+  apps: [{
+    name:        <span class="c-b">'konexa-cv-api'</span>,
+    script:      <span class="c-b">'backend/dist/main.js'</span>,
+    instances:   <span class="c-b">2</span>,           <span class="c-d">// cluster mode</span>
+    exec_mode:   <span class="c-b">'cluster'</span>,
+    watch:       <span class="c-r">false</span>,
+    max_memory_restart: <span class="c-b">'512M'</span>,
+    env: {
+      NODE_ENV: <span class="c-b">'production'</span>,
+      PORT:     <span class="c-b">3001</span>
+    },
+    error_file:  <span class="c-b">'./logs/err.log'</span>,
+    out_file:    <span class="c-b">'./logs/out.log'</span>,
+    log_date_format: <span class="c-b">'YYYY-MM-DD HH:mm:ss'</span>
+  }]
+};</code></pre>
+            </div>
+
+            <div class="card">
+                <h3>Traefik → PM2 (host)</h3>
+                <p>En la configuración dinámica de Traefik, el servicio del CV Parser apunta al host del servidor. La forma exacta depende de cómo esté configurado Traefik en el servidor:</p>
+                <pre><code><span class="c-d"># traefik/dynamic/cvparser.yml</span>
+http:
+  routers:
+    konexa-cv:
+      rule: <span class="c-b">"Host(`cvparser.konexa.cl`)"</span>
+      service: konexa-cv-svc
+      entryPoints: [<span class="c-b">websecure</span>]
+      tls:
+        certResolver: <span class="c-b">letsencrypt</span>
+
+  services:
+    konexa-cv-svc:
+      loadBalancer:
+        servers:
+          <span class="c-d"># IP interna del host o host.docker.internal</span>
+          - url: <span class="c-b">"http://172.17.0.1:3001"</span></code></pre>
+
+                <div class="callout yellow" style="margin-top:12px;">
+                    <strong>Nota:</strong> La IP <code>172.17.0.1</code> es la gateway por defecto de Docker hacia el host en Linux. Confirmar con <code>ip route | grep default</code> en el servidor.
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>Actualización sin downtime</h3>
+            <pre><code><span class="c-d"># En el servidor</span>
+cd /opt/konexa-cv
+git pull
+
+<span class="c-d"># Recompilar backend</span>
+npm run --prefix backend build
+
+<span class="c-d"># Recompilar frontend (si hubo cambios de UI)</span>
+npm run --prefix frontend build
+
+<span class="c-d"># Reload graceful — PM2 no mata instancias hasta que las nuevas están listas</span>
+pm2 reload konexa-cv-api
+
+<span class="c-d"># Verificar estado</span>
+pm2 status
+pm2 logs konexa-cv-api --lines 30</code></pre>
+        </div>
+
+        <div class="card card-blue" style="margin-top: 8px;">
+            <h3>Opción alternativa — Docker Compose</h3>
+            <p>Para quien prefiera contenedores, el repositorio incluye un <code>docker-compose.yml</code> con los mismos servicios. Usa <code>pm2-runtime</code> dentro del contenedor del backend y se conecta a la red Traefik existente:</p>
+            <pre><code>services:
+  api:
+    build: ./backend
+    env_file: .env
+    labels:
+      - <span class="c-b">"traefik.enable=true"</span>
+      - <span class="c-b">"traefik.http.routers.konexa-api.rule=Host(`cvparser.konexa.cl`)"</span>
+    networks: [traefik_network]
+
+networks:
+  traefik_network:
+    external: true
+
+<span class="c-d"># Iniciar con Docker en vez de PM2:</span>
+docker compose up -d --build</code></pre>
+            <p>Las migraciones y el seed se ejecutan igual, pero con <code>docker compose exec api npm run migration:run</code>.</p>
+        </div>
+    </section>
+
+    <!-- ══ AZURE SETUP ═════════════════════════════════ -->
+    <section id="azure-setup">
+        <h2>Setup de App Registration en Azure Entra ID</h2>
+
+        <p>Pasos para crear la App Registration dedicada a este sistema. Este proceso se realiza una sola vez y es independiente del registro de otros servicios de Konexa en Azure.</p>
+
+        <div class="grid-2">
+            <div class="card card-purple">
+                <h3>Parte 1 — Crear la App</h3>
+                <ul class="step-list">
+                    <li class="step-item"><div class="step-num blue">1</div><div class="step-text"><h4>Acceder a Azure Portal</h4><p>Ir a <code>portal.azure.com</code> → <strong>Microsoft Entra ID</strong> → <strong>App Registrations</strong> → <strong>+ New Registration</strong>.</p></div></li>
+                    <li class="step-item"><div class="step-num blue">2</div><div class="step-text"><h4>Configurar nombre y tenant</h4><p><strong>Name:</strong> <code>Konexa CV Parser</code>. <strong>Supported account types:</strong> elegir <em>"Accounts in this organizational directory only"</em> (Solo el tenant de Konexa).</p></div></li>
+                    <li class="step-item"><div class="step-num blue">3</div><div class="step-text"><h4>Agregar Redirect URI</h4><p>Tipo: <strong>Web</strong>. URI: <code>https://cvparser.konexa.cl/api/auth/microsoft/callback</code>. Agregar también <code>http://localhost:3001/api/auth/microsoft/callback</code> para desarrollo local.</p></div></li>
+                    <li class="step-item"><div class="step-num blue">4</div><div class="step-text"><h4>Registrar</h4><p>Clic en <strong>Register</strong>. Copiar el <strong>Application (client) ID</strong> y el <strong>Directory (tenant) ID</strong> que aparecen en el overview.</p></div></li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <h3>Parte 2 — Crear Client Secret</h3>
+                <ul class="step-list">
+                    <li class="step-item"><div class="step-num">1</div><div class="step-text"><h4>Ir a Certificates & Secrets</h4><p>En el menú lateral de la app recién creada → <strong>Certificates & secrets</strong> → <strong>+ New client secret</strong>.</p></div></li>
+                    <li class="step-item"><div class="step-num">2</div><div class="step-text"><h4>Configurar expiración</h4><p>Descripción: <code>konexa-cv-parser-prod</code>. Expiración: <strong>24 months</strong> (máximo recomendado). Clic en <strong>Add</strong>.</p></div></li>
+                    <li class="step-item"><div class="step-num">3</div><div class="step-text"><h4>Copiar el secret inmediatamente</h4><p>El <strong>Value</strong> solo se muestra una vez. Copiarlo ahora al <code>.env</code> como <code>AZURE_CLIENT_SECRET</code>. Si se pierde, hay que crear uno nuevo.</p></div></li>
+                </ul>
+
+                <div class="callout yellow" style="margin-top:14px;">
+                    <strong>⚠ Recordatorio importante:</strong> El Client Secret expira. Anotar la fecha de vencimiento en un lugar visible (ej: Notion del equipo). Cuando expire, la autenticación de todos los usuarios fallará hasta que se renueve.
+                </div>
+            </div>
+        </div>
+
+        <div class="card" style="margin-top:0;">
+            <h3>Resultado final — Variables para el <code>.env</code></h3>
+            <pre><code><span class="c-d"># Azure — obtenidos en los pasos anteriores</span>
+<span class="c-g">AZURE_TENANT_ID</span>=<span class="c-b">xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx</span>  <span class="c-d"># Directory (tenant) ID</span>
+<span class="c-g">AZURE_CLIENT_ID</span>=<span class="c-b">xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx</span>  <span class="c-d"># Application (client) ID</span>
+<span class="c-g">AZURE_CLIENT_SECRET</span>=<span class="c-b">xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</span>  <span class="c-d"># Value del secret</span>
+<span class="c-g">AZURE_CALLBACK_URL</span>=<span class="c-b">https://cvparser.konexa.cl/api/auth/microsoft/callback</span></code></pre>
+        </div>
+    </section>
+
+    <!-- ══ ROADMAP ════════════════════════════════════ -->
+    <section id="roadmap">
+        <h2>RoadMap — Fases, Git Commits y Plan de Testing</h2>
+
+        <div class="callout">
+            Cada fase produce un sistema funcionalmente completo y testeable antes de avanzar. Los commits siguen <strong>Conventional Commits</strong> (<code>feat:</code>, <code>fix:</code>, <code>chore:</code>).
+        </div>
+
+        <div class="roadmap-track">
+
+            <!-- FASE 0 -->
+            <div class="phase-block">
+                <div class="phase-dot">0</div>
+                <div class="phase-content">
+                    <div class="phase-header">
+                        <div class="phase-title">Fundación del Proyecto</div>
+                        <div class="phase-eta">Semana 1</div>
+                    </div>
+                    <p>Monorepo, estructura de directorios, PM2 en bare metal y base de datos lista.</p>
+                    <div class="commit-list">
+                        <div class="commit-item">
+                            <span class="commit-hash">chore: init monorepo (backend + frontend)</span>
+                            <div class="commit-msg">Inicializar NestJS y Vite+React. Definir estructura de módulos y scripts en <code>package.json</code> raíz.</div>
+                            <div class="commit-test"><code>npm run start:dev</code> en el backend levanta en <code>:3001</code>. <code>curl http://localhost:3001/api/health</code> retorna <code>{"status":"ok"}</code>. Vite compila el frontend sin errores.</div>
+                        </div>
+                        <div class="commit-item">
+                            <span class="commit-hash">chore: setup ecosystem.config.js and PM2 workflow</span>
+                            <div class="commit-msg">Archivo <code>ecosystem.config.js</code> con cluster mode (2 instancias), logs en <code>./logs/</code> y variables de entorno. Script <code>npm run deploy</code> que compila y hace reload.</div>
+                            <div class="commit-test"><code>pm2 start ecosystem.config.js</code> → <code>pm2 status</code> muestra 2 instancias <code>online</code>. <code>pm2 logs konexa-cv-api</code> sin errores. <code>pm2 reload konexa-cv-api</code> sin downtime (verificar con curl en paralelo).</div>
+                        </div>
+                        <div class="commit-item">
+                            <span class="commit-hash">chore: setup TypeORM + PostgreSQL + migrations</span>
+                            <div class="commit-msg">Configurar TypeORM con las 5 entidades base. Crear la primera migración que genera todas las tablas. <code>ConfigModule</code> de NestJS carga el <code>.env</code>.</div>
+                            <div class="commit-test"><code>npm run migration:run</code> sin errores. Verificar en psql: <code>\dt</code> muestra las 5 tablas. Verificar FKs con <code>\d candidates</code>. Verificar que <code>npm run migration:revert</code> elimina las tablas limpiamente.</div>
+                        </div>
+                        <div class="commit-item">
+                            <span class="commit-hash">chore: seed Hunting template into DB</span>
+                            <div class="commit-msg">Script de seed que inserta la plantilla Hunting.html completa en la tabla <code>templates</code> con <code>is_default=true</code>.</div>
+                            <div class="commit-test"><code>npm run seed</code> ejecuta sin errores. <code>SELECT name, is_default, length(html_content) FROM templates;</code> muestra <code>Hunting | true | [número > 1000]</code>.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- FASE 1 -->
+            <div class="phase-block">
+                <div class="phase-dot purple">1</div>
+                <div class="phase-content">
+                    <div class="phase-header">
+                        <div class="phase-title">Autenticación Microsoft OAuth2</div>
+                        <div class="phase-eta">Semana 2</div>
+                    </div>
+                    <div class="commit-list">
+                        <div class="commit-item">
+                            <span class="commit-hash">feat(auth): implement Microsoft OAuth2 with passport-azure-ad</span>
+                            <div class="commit-msg"><code>AuthModule</code> con estrategia Azure AD. Endpoints <code>/auth/microsoft</code> y <code>/auth/microsoft/callback</code>. Upsert de usuario en BD tras login exitoso.</div>
+                            <div class="commit-test">Abrir <code>http://localhost:3001/api/auth/microsoft</code> → redirige a Microsoft. Ingresar cuenta corporativa → callback recibe el token → responde con JWT. Verificar en jwt.io que el payload tiene <code>sub</code>, <code>email</code>, <code>name</code>, <code>role</code>. Intentar login con cuenta externa al tenant → Microsoft rechaza el acceso.</div>
+                        </div>
+                        <div class="commit-item">
+                            <span class="commit-hash">feat(auth): add JwtAuthGuard as global guard</span>
+                            <div class="commit-msg">Guard JWT aplicado globalmente. Decorador <code>@Public()</code> para excluir <code>/auth/*</code> y <code>/health</code>.</div>
+                            <div class="commit-test"><code>curl /api/candidates</code> sin token → <code>401</code>. Con JWT válido → <code>200</code>. Con JWT manipulado (cambiar un carácter) → <code>401</code>. Con JWT expirado → <code>401</code>.</div>
+                        </div>
+                        <div class="commit-item">
+                            <span class="commit-hash">feat(frontend): login page with Microsoft auth flow</span>
+                            <div class="commit-msg">Página <code>/login</code> con botón "Entrar con Microsoft". Auth context en React. Axios interceptor con el token. Ruta <code>/dashboard</code> protegida.</div>
+                            <div class="commit-test">Acceder a <code>/dashboard</code> sin sesión → redirige a <code>/login</code>. Login con Microsoft → llega al dashboard. Recargar la página → mantiene la sesión (token en memoria sobrevive a renders). Cerrar sesión → vuelve a <code>/login</code> y el token queda borrado.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- FASE 2 -->
+            <div class="phase-block">
+                <div class="phase-dot">2</div>
+                <div class="phase-content">
+                    <div class="phase-header">
+                        <div class="phase-title">Motor de Parsing de CVs</div>
+                        <div class="phase-eta">Semanas 3–4</div>
+                    </div>
+                    <div class="commit-list">
+                        <div class="commit-item">
+                            <span class="commit-hash">feat(parser): file upload endpoint (PDF + DOCX) with Multer</span>
+                            <div class="commit-msg"><code>POST /api/parser/upload</code>. Validación MIME y tamaño (20MB). Almacenamiento temporal en <code>/tmp</code>.</div>
+                            <div class="commit-test"><code>curl -F "file=@cv.pdf" .../parser/upload -H "Authorization: Bearer TOKEN"</code> → <code>200</code> con tmp path. Subir PNG → <code>400 Unsupported file type</code>. Subir archivo 25MB → <code>413 File too large</code>.</div>
+                        </div>
+                        <div class="commit-item">
+                            <span class="commit-hash">feat(converter): DOCX-to-PDF via LibreOffice CLI</span>
+                            <div class="commit-msg"><code>ConverterService</code> que ejecuta LibreOffice headless. Solo se invoca para DOCX.</div>
+                            <div class="commit-test">Subir DOCX real → logs muestran comando LibreOffice ejecutado → PDF generado en <code>/tmp</code>. Subir PDF directamente → LibreOffice NO se invoca (verificar en logs). Subir DOCX corrupto → error controlado, sin archivos huérfanos en <code>/tmp</code>.</div>
+                        </div>
+                        <div class="commit-item">
+                            <span class="commit-hash">feat(openai): CV extraction service with Files API</span>
+                            <div class="commit-msg"><code>OpenAIService</code>. Sube PDF a <code>files.create</code>, llama a <code>responses.create</code> con el prompt original. Parsea y valida el JSON.</div>
+                            <div class="commit-test">Upload de un CV real completo. Verificar en logs: (1) file_id recibido de OpenAI, (2) respuesta es JSON válido, (3) JSON contiene los 5 campos raíz. Verificar que los archivos temporales se limpian de <code>/tmp</code> en éxito y en fallo (try/finally).</div>
+                        </div>
+                        <div class="commit-item">
+                            <span class="commit-hash">feat(candidates): persist extracted JSON to PostgreSQL</span>
+                            <div class="commit-msg">Guardar candidato con relaciones. El endpoint retorna el objeto completo. Nombre de archivo PDF validado con fallback.</div>
+                            <div class="commit-test">Upload completo de CV. Verificar en BD: <code>SELECT nombres, apellidos, array_length(stack,1) FROM candidates ORDER BY created_at DESC LIMIT 1;</code>. Verificar experiencias: <code>SELECT COUNT(*) FROM experiences WHERE candidate_id='UUID';</code>. Subir CV con nombre vacío → <code>422</code> por validación DTO.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- FASE 3 -->
+            <div class="phase-block">
+                <div class="phase-dot yellow">3</div>
+                <div class="phase-content">
+                    <div class="phase-header">
+                        <div class="phase-title">Generación de PDF con Puppeteer</div>
+                        <div class="phase-eta">Semana 5</div>
+                    </div>
+                    <div class="commit-list">
+                        <div class="commit-item">
+                            <span class="commit-hash">feat(pdf): Puppeteer PDF generation endpoint</span>
+                            <div class="commit-msg"><code>PdfService</code> con Handlebars + Puppeteer. Endpoint <code>POST /api/candidates/:id/download-pdf</code>. Stream directo sin guardar en servidor.</div>
+                            <div class="commit-test"><code>curl -X POST .../candidates/UUID/download-pdf -H "Authorization: Bearer TOKEN" --output test.pdf</code>. Abrir el PDF y verificar visualmente: header oscuro, logo Konexa, sidebar verde con stack e idiomas, experiencias y educación correctas. Verificar A4 y márgenes. Verificar que <code>/tmp</code> no contiene archivos nuevos tras la descarga.</div>
+                        </div>
+                        <div class="commit-item">
+                            <span class="commit-hash">feat(pdf): safe filename builder with edge-case coverage</span>
+                            <div class="commit-msg">Función <code>buildFilename</code> con fallback. <code>Content-Disposition</code> correctamente formateado.</div>
+                            <div class="commit-test">Crear candidato con <code>nombres=''</code> manualmente en BD. Solicitar PDF → descarga como <code>Candidato_Konexa_CV.pdf</code> sin error 500. Candidato con nombre "José María García López" → descarga como <code>José_García_CV.pdf</code>.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- FASE 4 -->
+            <div class="phase-block">
+                <div class="phase-dot blue">4</div>
+                <div class="phase-content">
+                    <div class="phase-header">
+                        <div class="phase-title">Frontend — Dashboard y Editor</div>
+                        <div class="phase-eta">Semanas 6–7</div>
+                    </div>
+                    <div class="commit-list">
+                        <div class="commit-item">
+                            <span class="commit-hash">feat(frontend): candidates dashboard with list and search</span>
+                            <div class="commit-msg">Vista principal con tabla de candidatos. Búsqueda por nombre. Paginación. Botones de editar y descargar PDF.</div>
+                            <div class="commit-test">Con 5 candidatos en BD, el dashboard los muestra todos. Búsqueda por nombre filtra correctamente. Clic en "Descargar PDF" → browser descarga el archivo. La tabla se refresca automáticamente tras parsear un nuevo CV sin recargar la página.</div>
+                        </div>
+                        <div class="commit-item">
+                            <span class="commit-hash">feat(frontend): CV upload panel with progress (single + bulk)</span>
+                            <div class="commit-msg">Dropzone con drag & drop. Múltiples archivos simultáneos. Barra de progreso por archivo. Lista de resultados con status.</div>
+                            <div class="commit-test">Subir 1 PDF → progreso completa → aparece en el listado. Subir 3 archivos (2 PDF + 1 DOCX) → 3 barras de progreso individuales → 3 candidatos nuevos en BD. Subir un PNG → mensaje de error claro, el resto de archivos se procesan normalmente.</div>
+                        </div>
+                        <div class="commit-item">
+                            <span class="commit-hash">feat(frontend): interactive CV editor with form validation</span>
+                            <div class="commit-msg">Editor con formulario por secciones. Lista editable de experiencias con orden arrastrable. Stack como chips editables. Botón "Guardar" y "Descargar PDF".</div>
+                            <div class="commit-test">Editar nombre → guardar → recargar → cambio persiste en BD. Reordenar experiencias → guardar → verificar <code>orden</code> en BD. Descargar PDF tras editar → PDF refleja los cambios. Dejar <code>nombres</code> vacío → validación en formulario impide guardar con mensaje de error inline.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- FASE 5 -->
+            <div class="phase-block">
+                <div class="phase-dot blue">5</div>
+                <div class="phase-content">
+                    <div class="phase-header">
+                        <div class="phase-title">Integración Teamtailor</div>
+                        <div class="phase-eta">Semana 8</div>
+                    </div>
+                    <div class="commit-list">
+                        <div class="commit-item">
+                            <span class="commit-hash">feat(teamtailor): search proxy with name/ID auto-detection</span>
+                            <div class="commit-msg"><code>TeamtailorModule</code> con <code>GET /api/teamtailor/candidates</code>. Regex <code>/^(TT-?)?\d+$/i</code> para detectar modo. Sin params → últimos 10.</div>
+                            <div class="commit-test"><code>curl .../teamtailor/candidates</code> → lista los 10 más recientes de TT. <code>?q=Carlos</code> → resultados con "Carlos" en el nombre. <code>?q=4821</code> → solo ese candidato por ID. <code>?q=TT-4821</code> → mismo resultado que <code>4821</code>. <code>?q=123abc</code> → búsqueda por nombre (no por ID). Verificar que el <code>TEAMTAILOR_API_TOKEN</code> no aparece en ninguna respuesta JSON.</div>
+                        </div>
+                        <div class="commit-item">
+                            <span class="commit-hash">feat(teamtailor): CV download and import pipeline</span>
+                            <div class="commit-msg"><code>POST /api/teamtailor/import/:ttId</code>. Descarga CV desde URL S3. Pasa al <code>ParserService</code>. Guarda <code>tt_candidate_id</code> en BD.</div>
+                            <div class="commit-test">Importar candidato de TT que tiene CV adjunto → candidato aparece en BD con <code>tt_candidate_id</code> poblado → editor se abre con datos extraídos. Importar candidato sin CV adjunto en TT → responde <code>422</code> con mensaje claro. Importar el mismo candidato dos veces → el <code>tt_candidate_id</code> es único, la BD acepta ambos (son instancias independientes del parsing).</div>
+                        </div>
+                        <div class="commit-item">
+                            <span class="commit-hash">feat(frontend): Teamtailor search panel with debounce + mode pill</span>
+                            <div class="commit-msg">Panel de búsqueda con input, pill de modo (nombre/ID/últimos10), debounce de 350ms, lista de resultados y botón "Importar".</div>
+                            <div class="commit-test">Abrir panel → carga los últimos 10 automáticamente. Escribir "Mar" → pill cambia a "Búsqueda por nombre" antes de hacer el request. Esperar 350ms → resultados actualizados. Escribir "4821" → pill cambia a "Búsqueda por ID". Escribir 6 letras rápidamente → verificar en Network tab que solo se hace 1 llamada total. Clic en "Importar" → editor se abre con los datos del candidato TT.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- FASE 6 -->
+            <div class="phase-block">
+                <div class="phase-dot yellow">6</div>
+                <div class="phase-content">
+                    <div class="phase-header">
+                        <div class="phase-title">Hardening y Producción</div>
+                        <div class="phase-eta">Semana 9</div>
+                    </div>
+                    <div class="commit-list">
+                        <div class="commit-item">
+                            <span class="commit-hash">feat(backend): global exception filter with structured errors</span>
+                            <div class="commit-msg">Filtro global que intercepta todas las excepciones y retorna JSON uniforme: <code>{"error":"...", "message":"...", "statusCode":400}</code>. Stack traces solo en logs.</div>
+                            <div class="commit-test">Desconectar BD temporalmente y hacer un request → respuesta al cliente es JSON limpio sin stack trace. El stack trace sí aparece en <code>pm2 logs</code>. Petición a ruta inexistente → <code>404</code> con el mismo formato JSON.</div>
+                        </div>
+                        <div class="commit-item">
+                            <span class="commit-hash">fix(parser): guarantee /tmp cleanup on all error paths</span>
+                            <div class="commit-msg">Asegurar <code>try/finally</code> en todos los caminos de <code>parseSingle</code>. Archivos huérfanos en <code>/tmp</code> eliminados incluso si OpenAI falla.</div>
+                            <div class="commit-test">Simular fallo de OpenAI con API key inválida. Verificar que <code>/tmp</code> no contiene archivos después del error. Simular fallo de LibreOffice (archivo DOCX corrupto). Verificar mismo resultado.</div>
+                        </div>
+                        <div class="commit-item">
+                            <span class="commit-hash">chore: production deployment and end-to-end validation</span>
+                            <div class="commit-msg">Despliegue completo en el servidor. Configuración de Traefik, HTTPS con Let's Encrypt, <code>pm2 startup</code>.</div>
+                            <div class="commit-test">Flujo completo en producción: (1) Login con cuenta Microsoft real → éxito. (2) Subir CV PDF real → parsear → verificar JSON en BD → descargar PDF → comparar visualmente con el PDF generado por el sistema Python actual. (3) Buscar candidato en Teamtailor por nombre → importar → descargar PDF. (4) Reiniciar el servidor → PM2 levanta el servicio automáticamente → funciona sin intervención manual.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div><!-- end roadmap-track -->
+
+        <div class="card" style="margin-top: 30px;">
+            <h3>Resumen — Fases y tiempos</h3>
+            <table>
+                <thead><tr><th>Fase</th><th>Foco</th><th>Entregable verificable</th><th>Est.</th></tr></thead>
+                <tbody>
+                    <tr><td><span class="badge">0</span></td><td>Fundación y PM2</td><td>Servidor levanta con PM2, tablas creadas, seed ejecutado</td><td>Sem. 1</td></tr>
+                    <tr><td><span class="badge purple">1</span></td><td>Auth Microsoft</td><td>Login corporativo funcional, rutas protegidas con JWT</td><td>Sem. 2</td></tr>
+                    <tr><td><span class="badge">2</span></td><td>Motor de Parsing</td><td>Upload → LibreOffice → OpenAI → JSON en BD (solo API)</td><td>Sem. 3–4</td></tr>
+                    <tr><td><span class="badge yellow">3</span></td><td>Generación PDF</td><td>Descarga del CV Konexa-branded desde endpoint REST</td><td>Sem. 5</td></tr>
+                    <tr><td><span class="badge blue">4</span></td><td>Frontend Core</td><td>Dashboard + upload UI + editor interactivo funcional</td><td>Sem. 6–7</td></tr>
+                    <tr><td><span class="badge blue">5</span></td><td>Teamtailor</td><td>Buscador con debounce + detección nombre/ID + import</td><td>Sem. 8</td></tr>
+                    <tr><td><span class="badge yellow">6</span></td><td>Hardening</td><td>Manejo de errores robusto + despliegue validado en producción</td><td>Sem. 9</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+</div><!-- end content-area -->
+
+<script>
+    function setActive(el) {
+        document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active'));
+        el.classList.add('active');
+    }
+
+    window.addEventListener('scroll', () => {
+        let cur = '';
+        document.querySelectorAll('section[id]').forEach(s => {
+            if (window.scrollY >= s.offsetTop - 90) cur = s.id;
+        });
+        document.querySelectorAll('.nav-links a').forEach(a => {
+            a.classList.toggle('active', a.getAttribute('href') === '#' + cur);
+        });
+    });
+
+    // ── Teamtailor search demo ─────────────────────────
+    const ID_REGEX = /^(TT-?)?\d+$/i;
+    const fakeData = [
+        { name: 'María González',  id: 'TT-4821', time: 'hace 2 días' },
+        { name: 'Carlos Reyes',    id: 'TT-4819', time: 'hace 3 días' },
+        { name: 'Ana Martínez',    id: 'TT-4815', time: 'hace 5 días' },
+        { name: 'Pedro Soto',      id: 'TT-4800', time: 'hace 1 semana' },
+        { name: 'Carla Núñez',     id: 'TT-4790', time: 'hace 1 semana' },
+        { name: 'Martín Vargas',   id: 'TT-4785', time: 'hace 2 semanas' },
+    ];
+
+    let debounceTimer;
+
+    function handleTTSearch(val) {
+        const pill    = document.getElementById('mode-pill');
+        const status  = document.getElementById('tt-status');
+        const results = document.getElementById('tt-results');
+
+        // ── Modo del pill (sin delay) ──
+        if (!val.trim()) {
+            pill.className   = 'search-mode-pill default';
+            pill.textContent = 'Últimos 10';
+        } else if (ID_REGEX.test(val.trim())) {
+            pill.className   = 'search-mode-pill id';
+            pill.textContent = '🟡 Búsqueda por ID';
+        } else {
+            pill.className   = 'search-mode-pill name';
+            pill.textContent = '🔵 Búsqueda por nombre';
+        }
+
+        // ── Request con debounce ──
+        clearTimeout(debounceTimer);
+
+        if (!val.trim()) {
+            renderResults(fakeData.slice(0, 3));
+            status.className = 'search-status done';
+            status.textContent = 'Mostrando últimos 10 candidatos';
+            return;
+        }
+
+        status.className = 'search-status loading';
+        status.textContent = `Esperando 350ms...`;
+        results.innerHTML  = '';
+
+        debounceTimer = setTimeout(() => {
+            status.textContent = ID_REGEX.test(val.trim())
+                ? `GET /v1/candidates?filter[id]=${val.trim().replace(/^TT-?/i,'')}`
+                : `GET /v1/candidates?filter[name]=${val.trim()}`;
+
+            setTimeout(() => {
+                let filtered;
+                if (ID_REGEX.test(val.trim())) {
+                    const numId = val.trim().replace(/^TT-?/i, '');
+                    filtered = fakeData.filter(c => c.id === `TT-${numId}`);
+                } else {
+                    filtered = fakeData.filter(c => c.name.toLowerCase().includes(val.toLowerCase()));
+                }
+                renderResults(filtered);
+                status.className   = 'search-status done';
+                status.textContent = filtered.length > 0
+                    ? `${filtered.length} candidato(s) encontrado(s) en Teamtailor`
+                    : 'Sin resultados en Teamtailor';
+            }, 380);
+        }, 350);
+    }
+
+    function renderResults(data) {
+        const el = document.getElementById('tt-results');
+        el.innerHTML = data.length
+            ? data.map(c => `
+                <div class="search-result-item">
+                    <div>
+                        <div class="result-name">${c.name}</div>
+                        <div class="result-meta">${c.id} · Ingresó ${c.time}</div>
+                    </div>
+                    <div class="result-action">Importar →</div>
+                </div>`).join('')
+            : `<div style="color:var(--text-muted);font-size:13px;padding:10px 0;">Sin resultados</div>`;
+    }
+</script>
+</body>
+</html>

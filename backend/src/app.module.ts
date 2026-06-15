@@ -1,0 +1,33 @@
+import { Module } from '@nestjs/common';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
+import { Candidate } from './entities/candidate.entity';
+import { Experience } from './entities/experience.entity';
+import { Education } from './entities/education.entity';
+import { Template } from './entities/template.entity';
+import { User } from './entities/user.entity';
+
+@Module({
+  imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: '../.env',
+    }),
+    TypeOrmModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: (configService: ConfigService) => ({
+        type: 'postgres',
+        url: configService.get<string>('DATABASE_URL'),
+        entities: [Candidate, Experience, Education, Template, User],
+        synchronize: false, // Set to true only in dev without migrations, but we use migrations
+      }),
+      inject: [ConfigService],
+    }),
+    TypeOrmModule.forFeature([Candidate, Experience, Education, Template, User]),
+  ],
+  controllers: [AppController],
+  providers: [AppService],
+})
+export class AppModule {}
