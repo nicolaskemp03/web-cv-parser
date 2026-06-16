@@ -1,7 +1,35 @@
-import { useState } from 'react';
+import { useState, Component } from 'react';
+import type { ErrorInfo, ReactNode } from 'react';
 import { UploadPanel } from '../components/UploadPanel';
 import { CandidatesList } from '../components/CandidatesList';
 import { CandidateEditor } from '../components/CandidateEditor';
+
+class ErrorBoundary extends Component<{children: ReactNode}, {hasError: boolean, error: Error | null}> {
+  constructor(props: {children: ReactNode}) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
+  }
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    console.error("ErrorBoundary caught an error", error, errorInfo);
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ padding: '20px', backgroundColor: 'var(--red-glow)', border: '1px solid var(--red)', borderRadius: '8px', color: 'var(--red)' }}>
+          <h3>Algo salió mal al cargar el editor:</h3>
+          <pre style={{ whiteSpace: 'pre-wrap', marginTop: '10px', fontSize: '0.9rem' }}>
+            {this.state.error?.toString()}
+          </pre>
+          <button className="btn-secondary" style={{ marginTop: '15px' }} onClick={() => this.setState({hasError: false})}>Reintentar</button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 export function Dashboard() {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
@@ -24,7 +52,9 @@ export function Dashboard() {
     return (
       <div className="animate-fade-in">
         <h2>Editor de Candidato</h2>
-        <CandidateEditor id={editingId} onClose={handleEditorClose} />
+        <ErrorBoundary>
+          <CandidateEditor id={editingId} onClose={handleEditorClose} />
+        </ErrorBoundary>
       </div>
     );
   }
