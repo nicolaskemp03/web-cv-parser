@@ -131,6 +131,12 @@ export function TeamtailorImportModal({ onClose, onSuccess }: { onClose: () => v
               ))}
             </div>
           )}
+
+          {!searching && results.length > 0 && query.length > 2 && !query.includes('@') && !/^\d+$/.test(query.trim()) && !(/^[+\d\s]+$/.test(query.trim()) && query.trim().length >= 6) && (
+            <div style={{ textAlign: 'center', marginTop: '15px', padding: '10px', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+              * Mostrando resultados locales (búsqueda limitada a los últimos 210 postulantes)
+            </div>
+          )}
         </div>
 
       </div>
