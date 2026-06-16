@@ -16,18 +16,15 @@ El sistema es un **monorepo** compuesto por dos piezas fundamentales:
 Se requiere un archivo `.env` en la raíz del backend con los siguientes parámetros:
 
 ```env
-# Configuración Base
+# Server Ports
 PORT=3001
-NODE_ENV=production
+FRONTEND_PORT=5173
+
 # Fundamental para asegurar que PostgreSQL y NodeJS sincronicen correctamente fechas/horas
 TZ=UTC
 
 # Base de Datos (PostgreSQL)
-DB_HOST=localhost
-DB_PORT=5432
-DB_USER=usuario
-DB_PASS=password
-DB_NAME=web_cv_parser
+DATABASE_URL=postgresql://user:password@localhost:5432/konexacv
 
 # Auth y Seguridad
 JWT_SECRET=tu_clave_secreta_super_segura
@@ -45,8 +42,11 @@ TEAMTAILOR_API_TOKEN=Bearer tu_token_aqui
 El sistema está configurado para correr usando **PM2** y **Traefik** como proxy reverso para la capa SSL/TLS.
 
 ### Pasos de despliegue:
-1. `npm run build:all` en la raíz (Compila Backend y Frontend).
-2. `pm2 start ecosystem.config.js --env production` (Arranca ambos servicios, Backend en 3001, Frontend usando `serve` en 5173).
+1. Descarga el repositorio al servidor.
+2. Ejecuta `npm run install:all` para instalar automáticamente las dependencias raíz, de backend y de frontend.
+3. Configura tu archivo `.env` en la raíz (usando `.env.example` como base).
+4. Ejecuta `npm run build:all` en la raíz (Compila Backend y Frontend).
+5. Ejecuta `pm2 start ecosystem.config.js --env production` (Arranca ambos servicios mediante PM2).
 
 ### Rotación de Logs
 Se recomienda instalar `pm2-logrotate` en el servidor host:
