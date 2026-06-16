@@ -2,8 +2,11 @@ import { useEffect, useState } from 'react';
 import { ArrowLeft, Save, Plus, Trash2, Download, Loader2, GripVertical, X } from 'lucide-react';
 import api from '../api/api';
 // @ts-ignore
-import ReactQuill from 'react-quill';
+import RQ from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
+
+const RQAny: any = RQ;
+const ReactQuill = typeof RQAny === 'function' ? RQAny : RQAny.default ? RQAny.default : RQAny;
 
 import {
   DndContext,
