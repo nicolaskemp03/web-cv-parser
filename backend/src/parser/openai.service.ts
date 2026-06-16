@@ -113,7 +113,11 @@ export class OpenAIService {
 
     // Cleanup: delete the file from OpenAI
     try {
-      await (this.client.files as any).del(file.id).catch(() => this.client.files.delete(file.id));
+      if (typeof (this.client.files as any).del === 'function') {
+        await (this.client.files as any).del(file.id);
+      } else if (typeof (this.client.files as any).delete === 'function') {
+        await (this.client.files as any).delete(file.id);
+      }
       this.logger.log(`Deleted file ${file.id} from OpenAI`);
     } catch (e) {
       this.logger.warn(`Failed to delete file ${file.id} from OpenAI: ${e}`);
