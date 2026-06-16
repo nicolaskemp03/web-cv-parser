@@ -6,8 +6,21 @@ import { Candidate } from '../entities/candidate.entity';
 import * as Handlebars from 'handlebars';
 import * as puppeteer from 'puppeteer';
 
-// Konexa SVG logo encoded as base64 (same as used in the Python parser)
-const KONEXA_LOGO_BASE64 = 'PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+CjwhRE9DVFlQRSBzdmcgUFVCTElDICItLy9XM0MvL0RURCBTVkcgMS4xLy9FTiIgImh0dHA6Ly93d3cudzMub3JnL0dyYXBoaWNzL1NWRy8xLjEvRFREL3N2ZzExLmR0ZCI+Cjxzdmcgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgdmlld0JveD0iMCAwIDE0NDEgMTQ0MCIgdmVyc2lvbj0iMS4xIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB4bWw6c3BhY2U9InByZXNlcnZlIiB4bWxuczpzZXJpZj0iaHR0cDovL3d3dy5zZXJpZi5jb20vIiBzdHlsZT0iZmlsbC1ydWxlOmV2ZW5vZGQ7Y2xpcC1ydWxlOmV2ZW5vZGQ7c3Ryb2tlLWxpbmVqb2luOnJvdW5kO3N0cm9rZS1taXRlcmxpbWl0OjI7Ij4KICAgIDxnIHRyYW5zZm9ybT0ibWF0cml4KDEsMCwwLDEsLTc5NjAsMCkiPgogICAgICAgIDxnIGlkPSJMb2dvLUZhdmljb24tcG5nIiBzZXJpZjppZD0iTG9nbyBGYXZpY29uIHBuZyIgdHJhbnNmb3JtPSJtYXRyaXgoMC41NjI1LDAsMCwxLDQ5NzcuOTYsMCkiPgogICAgICAgICAgICA8cmVjdCB4PSI1MzAxLjgzIiB5PSIwIiB3aWR0aD0iMjU2MCIgaGVpZ2h0PSIxNDQwIiBzdHlsZT0iZmlsbDpub25lOyIvPgogICAgICAgICAgICA8ZyB0cmFuc2Zvcm09Im1hdHJpeCg0LjI4NDkyLDAsMCwyLjQxMDI3LDQyOTIuMzEsLTUwMS4xMTgpIj4KICAgICAgICAgICAgICAgIDxwYXRoIGQ9Ik0zMzUuMzMzLDc2MS43MTlMMjU0LjIyNyw3NjEuNzE5TDQzMi4zNDIsMjQwLjc2Mkw1MTIuMzg4LDI0MC43NjJMMzM1LjMzMyw3NjEuNzE5WiIgc3R5bGU9ImZpbGw6cmdiKDcxLDI1NSwxNTApO2ZpbGwtcnVsZTpub256ZXJvOyIvPgogICAgICAgICAgICAgICAgPGcgdHJhbnNmb3JtPSJtYXRyaXgoMS4yMjA4MywwLDAsMS4xNjUwMiwtMTI5LjQ1LC04My4xNDczKSI+CiAgICAgICAgICAgICAgICAgICAgPHBhdGggZD0iTTUyNi41OTksNDcwLjg4Nkw3NTMuNTg2LDM3MC40NjNMNzczLjA0OCw0MjkuMjQ1TDU5OS4zNDIsNTAxLjMwOEw3NzMuNDE3LDU3NS41ODhMNzUzLjU4Niw2MzIuMDE4TDUyNi41OTksNTMxLjU5NEw1MjYuNTk5LDQ3MC44ODZaIiBzdHlsZT0iZmlsbDpyZ2IoNzEsMjU1LDE1MCk7ZmlsbC1ydWxlOm5vbnplcm87Ii8+CiAgICAgICAgICAgICAgICA8L2c+CiAgICAgICAgICAgIDwvZz4KICAgICAgICA8L2c+CiAgICA8L2c+Cjwvc3ZnPgo=';
+// Raw Konexa SVG logo for crisp rendering in Puppeteer
+const KONEXA_LOGO_SVG = `
+<svg class="logo" viewBox="0 0 1441 1440" version="1.1" xmlns="http://www.w3.org/2000/svg" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2; width: 100%; height: auto; max-height: 125px;">
+    <g transform="matrix(1,0,0,1,-7960,0)">
+        <g transform="matrix(0.5625,0,0,1,4977.96,0)">
+            <g transform="matrix(4.28492,0,0,2.41027,4292.31,-501.118)">
+                <path d="M335.333,761.719L254.227,761.719L432.342,240.762L512.388,240.762L335.333,761.719Z" style="fill:rgb(71,255,150);fill-rule:nonzero;"/>
+                <g transform="matrix(1.22083,0,0,1.16502,-129.45,-83.1473)">
+                    <path d="M526.599,470.886L753.586,370.463L773.048,429.245L599.342,501.308L773.417,575.588L753.586,632.018L526.599,531.594L526.599,470.886Z" style="fill:rgb(71,255,150);fill-rule:nonzero;"/>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>
+`;
 
 @Injectable()
 export class PdfService {
@@ -80,7 +93,7 @@ export class PdfService {
         })),
       stack_tecnologico: candidate.stack || [],
       idiomas: candidate.idiomas || {},
-      logo_base64: KONEXA_LOGO_BASE64,
+      logo_svg: KONEXA_LOGO_SVG,
     };
 
     // Register Handlebars helpers
@@ -177,6 +190,7 @@ export class PdfService {
     // But we need triple-stache for HTML content (resumen has <strong> tags)
     hbs = hbs.replace(/\{\{\s*bio\.resumen\s*\}\}/g, '{{{bio.resumen}}}');
     hbs = hbs.replace(/\{\{\s*this\.descripcion\s*\}\}/g, '{{{this.descripcion}}}');
+    hbs = hbs.replace(/<img[^>]*src="data:image\/png;base64,\{\{\s*logo_base64\s*\}\}"[^>]*>/g, '{{{logo_svg}}}');
 
     return hbs;
   }
