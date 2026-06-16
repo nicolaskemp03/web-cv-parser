@@ -50,46 +50,40 @@ export class TeamtailorService {
         throw e;
       }
     } else {
-      url += `&filter[name]=${encodeURIComponent(query)}`;
+      url += `&query=${encodeURIComponent(query)}`;
       const res = await axios.get(url, { headers: this.headers });
       return res.data.data;
     }
   }
 
   async importCandidate(id: string, userId?: string) {
-    this.logger.log(`Fetching candidate ${id} from Teamtailor with documents...`);
-    const url = `${this.baseUrl}/candidates/${id}?include=documents`;
+    this.logger.log(`Fetching candidate ${id} from Teamtailor...`);
+    const url = `${this.baseUrl}/candidates/${id}`;
     
     let response;
     try {
       response = await axios.get(url, { headers: this.headers });
-    } catch (e) {
+    } catch (e: any) {
       this.logger.error(`Error fetching from TT: ${e.message}`);
       throw new BadRequestException('No se pudo obtener el candidato desde Teamtailor');
     }
 
-    const data = response.data;
-    const included = data.included || [];
+    const candidateData = response.data.data;
+    const attributes = candidateData.attributes;
     
-    // Find a valid CV document (PDF or DOCX)
-    const documents = included.filter((item: any) => item.type === 'documents');
-    let targetDoc = null;
+    const fileUrl = attributes.resume || attributes['original-resume'];
 
-    for (const doc of documents) {
-      const fileName = (doc.attributes['file-name'] || '').toLowerCase();
-      if (fileName.endsWith('.pdf') || fileName.endsWith('.docx')) {
-        targetDoc = doc;
-        break;
-      }
+    if (!fileUrl) {
+      throw new NotFoundException('El candidato no tiene un CV adjunto (resume) en Teamtailor.');
     }
 
-    if (!targetDoc) {
-      throw new NotFoundException('El candidato no tiene un CV en formato PDF o DOCX adjunto en Teamtailor.');
+    // Attempt to extract filename from URL, fallback to default
+    let fileName = fileUrl.split('/').pop()?.split('?')[0] || `cv_${id}.pdf`;
+    if (!fileName.toLowerCase().endsWith('.pdf') && !fileName.toLowerCase().endsWith('.docx')) {
+      fileName += '.pdf'; // Asume PDF by default if no extension is clearly found in the URL
     }
 
-    const fileUrl = targetDoc.attributes.url;
-    const fileName = targetDoc.attributes['file-name'];
-    this.logger.log(`Downloading CV from Teamtailor: ${fileName}`);
+    this.logger.log(`Downloading CV from Teamtailor: ${fileUrl}`);
 
     // Download the file
     let fileBuffer;
