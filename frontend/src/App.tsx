@@ -5,20 +5,7 @@ import { Login } from './pages/Login';
 import { AuthCallback } from './pages/AuthCallback';
 import './App.css';
 
-function DashboardPlaceholder() {
-  return (
-    <div className="animate-fade-in">
-      <h1 style={{ marginBottom: '20px' }}>Bienvenido al Parser</h1>
-      <div className="glass-panel" style={{ padding: '30px' }}>
-        <h3 style={{ color: 'var(--konexa-green)', marginBottom: '15px' }}>Fase 2 Completada</h3>
-        <p style={{ color: 'var(--text-muted)' }}>
-          La autenticación y el enrutamiento están funcionando correctamente. 
-          Este es un dashboard temporal.
-        </p>
-      </div>
-    </div>
-  );
-}
+import { Dashboard } from './pages/Dashboard';
 
 function App() {
   return (
@@ -29,7 +16,7 @@ function App() {
           <Route path="/auth/callback" element={<AuthCallback />} />
           
           <Route path="/" element={<Layout />}>
-            <Route index element={<DashboardPlaceholder />} />
+            <Route index element={<Dashboard />} />
             <Route path="candidates" element={<div className="animate-fade-in"><h2>Candidatos (Próximamente)</h2></div>} />
             <Route path="templates" element={<div className="animate-fade-in"><h2>Plantillas PDF (Próximamente)</h2></div>} />
             <Route path="settings" element={<div className="animate-fade-in"><h2>Configuración (Próximamente)</h2></div>} />

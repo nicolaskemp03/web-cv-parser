@@ -1,4 +1,3 @@
-import { LogIn } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { Navigate } from 'react-router-dom';
 
