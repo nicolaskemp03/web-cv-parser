@@ -109,16 +109,33 @@ export class PdfService {
       args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
     };
 
-    // Si se usó PUPPETEER_SKIP_DOWNLOAD, hay que proveer el binario de Chromium del sistema
-    const systemChromePath = process.env.CHROME_BIN || '/usr/bin/chromium-browser';
+    // Si se usó PUPPETEER_SKIP_DOWNLOAD, buscamos binarios comunes del sistema
     const fs = require('fs');
-    if (fs.existsSync(systemChromePath)) {
-      launchOptions.executablePath = systemChromePath;
+    const possiblePaths = [
+      process.env.CHROME_BIN,
+      '/usr/bin/google-chrome-stable',
+      '/usr/bin/google-chrome',
+      '/usr/bin/chromium',
+      '/usr/bin/chromium-browser',
+      '/snap/bin/chromium'
+    ];
+
+    for (const p of possiblePaths) {
+      if (p && fs.existsSync(p)) {
+        launchOptions.executablePath = p;
+        break;
+      }
     }
 
     this.logger.log(`Launch Puppeteer with options: ${JSON.stringify(launchOptions)}`);
 
-    const browser = await puppeteer.launch(launchOptions);
+    let browser;
+    try {
+      browser = await puppeteer.launch(launchOptions);
+    } catch (error) {
+      this.logger.error(`FATAL: Failed to launch Puppeteer browser. Error: ${error.message}`, error.stack);
+      throw new Error('No se pudo inicializar el motor de PDF (Puppeteer). Revisa los logs del servidor.');
+    }
 
     try {
       const page = await browser.newPage();
