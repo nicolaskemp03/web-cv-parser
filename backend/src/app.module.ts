@@ -26,7 +26,7 @@ import { TeamtailorModule } from './teamtailor/teamtailor.module';
         type: 'postgres',
         url: configService.get<string>('DATABASE_URL'),
         entities: [Candidate, Experience, Education, Template, User],
-        synchronize: false, // Set to true only in dev without migrations, but we use migrations
+        synchronize: true, // Auto-crea las tablas en Postgres la primera vez que se inicia
       }),
       inject: [ConfigService],
     }),
