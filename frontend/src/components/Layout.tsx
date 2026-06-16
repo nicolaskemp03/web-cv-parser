@@ -1,6 +1,6 @@
 import { Outlet, Navigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { LayoutDashboard, Users, FileText, Settings, LogOut } from 'lucide-react';
+import { LayoutDashboard, FileText, Settings, LogOut } from 'lucide-react';
 
 export function Layout() {
   const { isAuthenticated, logout } = useAuth();
@@ -12,7 +12,6 @@ export function Layout() {
 
   const navItems = [
     { path: '/', label: 'Dashboard', icon: LayoutDashboard },
-    { path: '/candidates', label: 'Candidatos', icon: Users },
     { path: '/templates', label: 'Plantillas PDF', icon: FileText },
     { path: '/settings', label: 'Configuración', icon: Settings },
   ];

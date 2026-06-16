@@ -17,7 +17,6 @@ function App() {
           
           <Route path="/" element={<Layout />}>
             <Route index element={<Dashboard />} />
-            <Route path="candidates" element={<div className="animate-fade-in"><h2>Candidatos (Próximamente)</h2></div>} />
             <Route path="templates" element={<div className="animate-fade-in"><h2>Plantillas PDF (Próximamente)</h2></div>} />
             <Route path="settings" element={<div className="animate-fade-in"><h2>Configuración (Próximamente)</h2></div>} />
           </Route>
