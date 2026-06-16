@@ -1,17 +1,30 @@
 module.exports = {
-  apps: [{
-    name: 'konexa-cv-api',
-    script: 'backend/dist/main.js',
-    instances: 2,
-    exec_mode: 'cluster',
-    watch: false,
-    max_memory_restart: '512M',
-    env: {
-      NODE_ENV: 'production',
-      PORT: 3001
+  apps: [
+    {
+      name: 'konexa-cv-backend',
+      script: 'npm',
+      args: 'run start:prod',
+      cwd: './backend',
+      env_production: {
+        NODE_ENV: 'production',
+        PORT: 3001
+      },
+      autorestart: true,
+      watch: false,
+      max_memory_restart: '1G'
     },
-    error_file: './logs/err.log',
-    out_file: './logs/out.log',
-    log_date_format: 'YYYY-MM-DD HH:mm:ss'
-  }]
+    {
+      name: 'konexa-cv-frontend',
+      script: 'npm',
+      args: 'run start',
+      cwd: './frontend',
+      env_production: {
+        NODE_ENV: 'production',
+        PORT: 5173
+      },
+      autorestart: true,
+      watch: false,
+      max_memory_restart: '1G'
+    }
+  ]
 };
