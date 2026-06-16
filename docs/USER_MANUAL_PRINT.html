@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Manual de Usuario - Konexa CV (Versión Imprimible)</title>
+  <style>
+    /* Estilos Optimizados para Impresión PDF */
+    @page {
+      size: A4;
+      margin: 2.5cm;
+    }
+
+    body {
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      color: #333;
+      line-height: 1.5;
+      background: #fff;
+    }
+
+    .header {
+      text-align: center;
+      border-bottom: 2px solid #00ff88;
+      padding-bottom: 20px;
+      margin-bottom: 40px;
+    }
+
+    h1 {
+      font-size: 24pt;
+      color: #111;
+      margin: 0;
+    }
+
+    .subtitle {
+      color: #666;
+      font-size: 14pt;
+      margin-top: 5px;
+    }
+
+    h2 {
+      font-size: 16pt;
+      color: #000;
+      border-bottom: 1px solid #ccc;
+      padding-bottom: 5px;
+      margin-top: 30pt;
+      page-break-after: avoid;
+    }
+
+    h3 {
+      font-size: 13pt;
+      color: #444;
+      margin-top: 20pt;
+      page-break-after: avoid;
+    }
+
+    p, li {
+      font-size: 11pt;
+      color: #444;
+    }
+
+    ul {
+      margin-top: 5pt;
+      margin-bottom: 15pt;
+    }
+
+    li {
+      margin-bottom: 5pt;
+    }
+
+    .note {
+      background-color: #f9f9f9;
+      border-left: 4px solid #00ff88;
+      padding: 10px 15px;
+      margin: 15px 0;
+      font-style: italic;
+    }
+
+    code {
+      font-family: 'Courier New', Courier, monospace;
+      background: #eee;
+      padding: 2px 4px;
+      font-size: 10pt;
+    }
+
+    /* Forzar saltos de página si es necesario */
+    .page-break {
+      page-break-before: always;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h1>Konexa CV Parser</h1>
+    <div class="subtitle">Manual de Usuario Oficial</div>
+  </div>
+
+  <p>La herramienta de procesamiento de CVs de Konexa permite la estandarización automatizada de currículums empleando Inteligencia Artificial avanzada, transformando documentos en crudo en un formato PDF premium, homogéneo y listo para clientes.</p>
+
+  <h2>1. Acceso al Sistema</h2>
+  <p>Para ingresar al sistema, diríjase a la dirección web interna proporcionada por el administrador e ingrese con la contraseña maestra autorizada del equipo de reclutamiento.</p>
+
+  <h2>2. Flujo de Importación de Candidatos</h2>
+  <p>Existen dos métodos para ingresar candidatos al sistema:</p>
+
+  <h3>A. Integración con Teamtailor (Recomendado)</h3>
+  <ul>
+    <li>En el panel principal, presione el botón <strong>Importar de Teamtailor</strong>.</li>
+    <li>Utilice el buscador para encontrar al candidato mediante su Nombre, Correo Electrónico o ID.</li>
+    <li>Una vez localizado, presione <strong>Extraer CV</strong>.</li>
+  </ul>
+  <div class="note">Nota: La búsqueda por nombre en Teamtailor es un proceso optimizado que busca de forma inteligente dentro de los ~210 registros más recientes. Para candidatos antiguos, se recomienda usar el correo electrónico.</div>
+
+  <h3>B. Carga Manual de Documentos</h3>
+  <ul>
+    <li>En el panel principal, seleccione <strong>Subir CV</strong>.</li>
+    <li>Seleccione el documento (Soportado: PDF o DOCX).</li>
+    <li>Indique el idioma original del documento para maximizar la precisión de la lectura por IA.</li>
+    <li>Presione <strong>Procesar Documento</strong>.</li>
+  </ul>
+
+  <div class="page-break"></div>
+
+  <h2>3. Proceso de Edición (Human-in-the-loop)</h2>
+  <p>El sistema extraerá más del 90% de la información automáticamente, pero permite supervisión humana total. Presione el ícono de edición (lápiz) sobre cualquier candidato para abrir el editor:</p>
+  <ul>
+    <li><strong>Datos Personales:</strong> Campos estándar de texto para ajustar ubicación y contacto.</li>
+    <li><strong>Acerca de:</strong> Editor de texto enriquecido. Puede seleccionar partes del texto y aplicar formatos básicos (Negrita, Cursiva).</li>
+    <li><strong>Organización de Experiencia/Educación:</strong> Haga clic sostenido sobre la esquina superior izquierda de cualquier tarjeta de experiencia y arrástrela (Drag & Drop) para alterar el orden cronológico o de importancia según requiera el cliente.</li>
+    <li><strong>Stack Tecnológico:</strong> Ingrese nuevas herramientas escribiéndolas y presionando la tecla <code>Enter</code>. Elimine elementos irrelevantes haciendo clic en el ícono de cierre.</li>
+  </ul>
+
+  <h2>4. Generación de Exportables (PDF)</h2>
+  <p>Cuando los datos del candidato estén pulidos y revisados:</p>
+  <ul>
+    <li>Desde la vista de edición o desde el panel principal, presione el botón <strong>Generar PDF</strong> (ícono de descarga).</li>
+    <li>El sistema compilará la información utilizando la plantilla oficial corporativa de Konexa (Dark Mode).</li>
+    <li>El navegador iniciará la descarga automáticamente del documento PDF resultante.</li>
+  </ul>
+
+</body>
+</html>

@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manual de Usuario - Web Embed</title>
+  <style>
+    /* Diseño amigable para ser embebido en otra aplicación web */
+    :root {
+      --bg-color: #0f172a;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --primary: #00ff88;
+      --card-bg: #1e293b;
+      --border: #334155;
+    }
+    
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      background-color: transparent; /* Ideal para embeber */
+      color: var(--text-main);
+      line-height: 1.6;
+      margin: 0;
+      padding: 20px;
+    }
+
+    .manual-container {
+      max-width: 800px;
+      margin: 0 auto;
+      background-color: var(--card-bg);
+      border-radius: 12px;
+      padding: 30px;
+      border: 1px solid var(--border);
+      box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5);
+    }
+
+    h1 {
+      color: var(--primary);
+      border-bottom: 2px solid var(--border);
+      padding-bottom: 10px;
+      margin-top: 0;
+    }
+
+    h2 {
+      color: #fff;
+      margin-top: 30px;
+      font-size: 1.4rem;
+    }
+
+    h3 {
+      color: #e2e8f0;
+      font-size: 1.1rem;
+    }
+
+    p, li {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+
+    ul {
+      padding-left: 20px;
+    }
+
+    li {
+      margin-bottom: 8px;
+    }
+
+    .badge {
+      background-color: rgba(0, 255, 136, 0.1);
+      color: var(--primary);
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 0.8rem;
+      border: 1px solid rgba(0, 255, 136, 0.2);
+    }
+
+    .highlight-box {
+      background-color: rgba(255, 255, 255, 0.05);
+      border-left: 4px solid var(--primary);
+      padding: 15px;
+      margin: 20px 0;
+      border-radius: 0 8px 8px 0;
+    }
+
+    code {
+      background: #000;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: monospace;
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+
+<div class="manual-container">
+  <h1>Manual de Usuario - Konexa CV</h1>
+  <p>Bienvenido a la herramienta automatizada de procesamiento de Currículums de Konexa. Esta aplicación utiliza Inteligencia Artificial para extraer, ordenar y dar formato a los currículums de forma automática.</p>
+
+  <h2>1. Ingreso al Sistema</h2>
+  <ul>
+    <li>Dirígete a la URL corporativa asignada.</li>
+    <li>Ingresa utilizando la contraseña maestra proveída por la administración.</li>
+  </ul>
+
+  <h2>2. Importación de Candidatos</h2>
+  <div class="highlight-box">
+    <h3>Opción A: Importar de Teamtailor <span class="badge">Recomendado</span></h3>
+    <p>Esta es la manera más rápida si el candidato ya está en el ATS.</p>
+    <ul>
+      <li>Haz clic en <strong>Importar de Teamtailor</strong> en el Dashboard.</li>
+      <li>Busca por nombre, correo o ID numérico. <em>(Nota: La búsqueda por nombre consulta a los últimos 210 postulantes recientes).</em></li>
+      <li>Presiona <strong>Extraer CV</strong>. El PDF original se descargará y leerá automáticamente.</li>
+    </ul>
+  </div>
+
+  <div class="highlight-box">
+    <h3>Opción B: Subir Manualmente</h3>
+    <p>Ideal para CVs recibidos por correos externos o WhatsApp.</p>
+    <ul>
+      <li>Haz clic en <strong>Subir CV</strong>.</li>
+      <li>Arrastra tu archivo <code>.pdf</code> o <code>.docx</code>.</li>
+      <li>Selecciona el idioma y presiona <strong>Procesar Documento</strong>.</li>
+    </ul>
+  </div>
+
+  <h2>3. Edición Interactiva</h2>
+  <p>En el Dashboard, presiona el ícono de lápiz en cualquier candidato para abrir el editor:</p>
+  <ul>
+    <li><strong>Datos Básicos:</strong> Corrige información de contacto.</li>
+    <li><strong>Acerca de:</strong> Utiliza el editor de texto enriquecido (Negritas, Cursivas).</li>
+    <li><strong>Experiencia y Educación:</strong> Reordena las experiencias utilizando la herramienta de "arrastrar y soltar" (Drag & Drop) en la esquina superior de cada tarjeta.</li>
+    <li><strong>Stack:</strong> Escribe tecnologías nuevas y presiona <code>Enter</code> para añadirlas, o bórralas con la "X".</li>
+  </ul>
+
+  <h2>4. Generación del Formato Konexa</h2>
+  <p>Una vez satisfecho con la edición, haz clic en el ícono de descarga (PDF). El sistema ensamblará un documento PDF premium utilizando la plantilla oficial de Konexa (modo oscuro, diseño estandarizado), dejándolo listo para ser enviado al cliente.</p>
+</div>
+
+</body>
+</html>
