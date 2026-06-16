@@ -11,6 +11,7 @@ import { User } from './entities/user.entity';
 import { AuthModule } from './auth/auth.module';
 import { ParserModule } from './parser/parser.module';
 import { CandidatesModule } from './candidates/candidates.module';
+import { PdfModule } from './pdf/pdf.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { CandidatesModule } from './candidates/candidates.module';
     AuthModule,
     ParserModule,
     CandidatesModule,
+    PdfModule,
   ],
   controllers: [AppController],
   providers: [AppService],
