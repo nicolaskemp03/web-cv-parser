@@ -104,10 +104,21 @@ export class PdfService {
     const renderedHtml = compiled(templateData);
 
     // Generate PDF with Puppeteer
-    const browser = await puppeteer.launch({
+    const launchOptions: any = {
       headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox'],
-    });
+      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
+    };
+
+    // Si se usó PUPPETEER_SKIP_DOWNLOAD, hay que proveer el binario de Chromium del sistema
+    const systemChromePath = process.env.CHROME_BIN || '/usr/bin/chromium-browser';
+    const fs = require('fs');
+    if (fs.existsSync(systemChromePath)) {
+      launchOptions.executablePath = systemChromePath;
+    }
+
+    this.logger.log(`Launch Puppeteer with options: ${JSON.stringify(launchOptions)}`);
+
+    const browser = await puppeteer.launch(launchOptions);
 
     try {
       const page = await browser.newPage();
