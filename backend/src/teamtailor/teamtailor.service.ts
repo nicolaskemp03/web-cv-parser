@@ -12,6 +12,8 @@ export class TeamtailorService {
   private readonly logger = new Logger(TeamtailorService.name);
   private readonly apiKey: string;
   private readonly baseUrl = 'https://api.na.teamtailor.com/v1';
+  private cachedCandidates: any[] | null = null;
+  private cacheTimestamp: number = 0;
 
   constructor(
     private configService: ConfigService,
@@ -38,22 +40,49 @@ export class TeamtailorService {
   async searchCandidates(query: string) {
     if (!query) return [];
 
-    let url = `${this.baseUrl}/candidates?page[size]=10`;
-    
-    // Si la query parece un número (ID de teamtailor) o si contiene texto
-    if (/^\d+$/.test(query)) {
+    const cleanQuery = query.trim();
+
+    // 1. Si la query es exactamente numérica, buscamos por ID
+    if (/^\d+$/.test(cleanQuery)) {
       try {
-        const res = await axios.get(`${this.baseUrl}/candidates/${query}`, { headers: this.headers });
+        const res = await axios.get(`${this.baseUrl}/candidates/${cleanQuery}`, { headers: this.headers });
         return [res.data.data];
-      } catch (e) {
+      } catch (e: any) {
         if (e.response?.status === 404) return [];
         throw e;
       }
-    } else {
-      url += `&query=${encodeURIComponent(query)}`;
-      const res = await axios.get(url, { headers: this.headers });
+    }
+
+    // 2. Si la query contiene '@', buscamos por Email (Filtro oficial)
+    if (cleanQuery.includes('@')) {
+      const res = await axios.get(`${this.baseUrl}/candidates?filter[email]=${encodeURIComponent(cleanQuery)}`, { headers: this.headers });
       return res.data.data;
     }
+
+    // 3. Si la query parece un teléfono (+ seguido de números o mínimo 6 números)
+    if (/^[+\d\s]+$/.test(cleanQuery) && cleanQuery.replace(/\s+/g, '').length >= 6) {
+      const phone = encodeURIComponent(cleanQuery.replace(/\s+/g, ''));
+      const res = await axios.get(`${this.baseUrl}/candidates?filter[phone]=${phone}`, { headers: this.headers });
+      return res.data.data;
+    }
+
+    // 4. "Out of the box": Filtro de Nombre en Memoria con Caché (1 minuto)
+    // Ya que TT no soporta buscar por nombre en la v1 nativamente.
+    const now = Date.now();
+    if (!this.cachedCandidates || (now - this.cacheTimestamp > 60000)) {
+      this.logger.log('Fetching latest 100 candidates for in-memory name search cache...');
+      const res = await axios.get(`${this.baseUrl}/candidates?page[size]=100&sort=-created-at`, { headers: this.headers });
+      this.cachedCandidates = res.data.data || [];
+      this.cacheTimestamp = now;
+    }
+
+    const lowerQuery = cleanQuery.toLowerCase();
+    return this.cachedCandidates!.filter((c: any) => {
+      const first = (c.attributes['first-name'] || '').toLowerCase();
+      const last = (c.attributes['last-name'] || '').toLowerCase();
+      const full = `${first} ${last}`;
+      return full.includes(lowerQuery) || first.includes(lowerQuery) || last.includes(lowerQuery);
+    });
   }
 
   async importCandidate(id: string, userId?: string) {

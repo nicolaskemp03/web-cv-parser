@@ -71,7 +71,7 @@ export function TeamtailorImportModal({ onClose, onSuccess }: { onClose: () => v
           <input
             type="text"
             className="input-field"
-            placeholder="Ej. Juan Zambrano ó 123456"
+            placeholder="Ej. correo@ejemplo.com, ID 123456, ó Juan Zambrano"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             style={{ paddingLeft: '45px', fontSize: '1.05rem', padding: '12px 15px 12px 45px' }}
