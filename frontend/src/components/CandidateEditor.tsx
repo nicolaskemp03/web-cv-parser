@@ -279,8 +279,8 @@ export function CandidateEditor({ id, onClose }: { id: string, onClose: () => vo
                 id={exp._dndId} 
                 exp={exp} 
                 index={idx} 
-                onRemove={handleRemoveArrayItem} 
-                onChange={handleArrayChange} 
+                onRemove={(idx: number) => handleRemoveArrayItem('experiences', idx)} 
+                onChange={(idx: number, field: string, val: any) => handleArrayChange('experiences', idx, field, val)} 
               />
             ))}
           </SortableContext>

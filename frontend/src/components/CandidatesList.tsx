@@ -122,7 +122,7 @@ export function CandidatesList({ refreshTrigger, onEdit }: { refreshTrigger: num
                   <td style={{ padding: '15px', color: 'var(--text-muted)' }}>{c.profesion || '—'}</td>
                   <td style={{ padding: '15px', color: 'var(--text-muted)' }}>{c.rut || '—'}</td>
                   <td style={{ padding: '15px', color: 'var(--text-muted)' }}>
-                    {format(new Date(c.created_at), 'dd/MM/yyyy HH:mm')}
+                    {format(new Date(c.created_at.endsWith('Z') ? c.created_at : c.created_at + 'Z'), 'dd/MM/yyyy HH:mm')}
                   </td>
                   <td style={{ padding: '15px', textAlign: 'right' }}>
                     <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
