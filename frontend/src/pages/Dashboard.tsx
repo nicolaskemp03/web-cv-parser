@@ -3,6 +3,8 @@ import type { ErrorInfo, ReactNode } from 'react';
 import { UploadPanel } from '../components/UploadPanel';
 import { CandidatesList } from '../components/CandidatesList';
 import { CandidateEditor } from '../components/CandidateEditor';
+import { TeamtailorImportModal } from '../components/TeamtailorImportModal';
+import { Upload, UserPlus } from 'lucide-react';
 
 class ErrorBoundary extends Component<{children: ReactNode}, {hasError: boolean, error: Error | null}> {
   constructor(props: {children: ReactNode}) {
@@ -33,6 +35,8 @@ class ErrorBoundary extends Component<{children: ReactNode}, {hasError: boolean,
 
 export function Dashboard() {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [showUpload, setShowUpload] = useState(false);
+  const [showTTImport, setShowTTImport] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
 
   const handleUploadSuccess = () => {
@@ -63,7 +67,36 @@ export function Dashboard() {
     <div className="animate-fade-in">
       <h1 style={{ marginBottom: '20px' }}>Dashboard de Procesamiento</h1>
       
-      <UploadPanel onUploadSuccess={handleUploadSuccess} />
+      <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
+        <button 
+          onClick={() => setShowTTImport(true)} 
+          className="btn-secondary" 
+          style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+        >
+          <UserPlus size={20} />
+          Importar de Teamtailor
+        </button>
+        <button 
+          onClick={() => setShowUpload(!showUpload)} 
+          className="btn-primary" 
+          style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+        >
+          <Upload size={20} />
+          Subir CV
+        </button>
+      </div>
+
+      {showUpload && <UploadPanel onUploadSuccess={handleUploadSuccess} />}
+      
+      {showTTImport && (
+        <TeamtailorImportModal 
+          onClose={() => setShowTTImport(false)} 
+          onSuccess={() => {
+            setShowTTImport(false);
+            setRefreshTrigger(prev => prev + 1);
+          }} 
+        />
+      )}
       
       <CandidatesList refreshTrigger={refreshTrigger} onEdit={handleEdit} />
     </div>

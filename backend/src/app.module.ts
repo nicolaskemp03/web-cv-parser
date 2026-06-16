@@ -12,6 +12,7 @@ import { AuthModule } from './auth/auth.module';
 import { ParserModule } from './parser/parser.module';
 import { CandidatesModule } from './candidates/candidates.module';
 import { PdfModule } from './pdf/pdf.module';
+import { TeamtailorModule } from './teamtailor/teamtailor.module';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { PdfModule } from './pdf/pdf.module';
     ParserModule,
     CandidatesModule,
     PdfModule,
+    TeamtailorModule,
   ],
   controllers: [AppController],
   providers: [AppService],
