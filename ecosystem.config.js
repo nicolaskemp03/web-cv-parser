@@ -6,8 +6,7 @@ module.exports = {
       args: 'run start:prod',
       cwd: './backend',
       env_production: {
-        NODE_ENV: 'production',
-        PORT: 3001
+        NODE_ENV: 'production'
       },
       autorestart: true,
       watch: false,
@@ -19,8 +18,7 @@ module.exports = {
       args: 'run start',
       cwd: './frontend',
       env_production: {
-        NODE_ENV: 'production',
-        PORT: 5173
+        NODE_ENV: 'production'
       },
       autorestart: true,
       watch: false,
