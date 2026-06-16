@@ -11,7 +11,7 @@ import { ParserService } from '../parser/parser.service';
 export class TeamtailorService {
   private readonly logger = new Logger(TeamtailorService.name);
   private readonly apiKey: string;
-  private readonly baseUrl = 'https://api.teamtailor.com/v1';
+  private readonly baseUrl = 'https://api.na.teamtailor.com/v1';
 
   constructor(
     private configService: ConfigService,
@@ -21,9 +21,16 @@ export class TeamtailorService {
   }
 
   private get headers() {
+    let authHeader = this.apiKey.trim();
+    if (authHeader.startsWith('Bearer ')) {
+      authHeader = `Token token=${authHeader.substring(7)}`;
+    } else if (!authHeader.startsWith('Token token=')) {
+      authHeader = `Token token=${authHeader}`;
+    }
+
     return {
-      Authorization: this.apiKey,
-      'X-Api-Version': '20210218',
+      Authorization: authHeader,
+      'X-Api-Version': '20240404',
       Accept: 'application/vnd.api+json',
     };
   }
