@@ -55,24 +55,39 @@ export class TeamtailorService {
 
     // 2. Si la query contiene '@', buscamos por Email (Filtro oficial)
     if (cleanQuery.includes('@')) {
-      const res = await axios.get(`${this.baseUrl}/candidates?filter[email]=${encodeURIComponent(cleanQuery)}`, { headers: this.headers });
+      const res = await axios.get(`${this.baseUrl}/candidates?filter[email]=${encodeURIComponent(cleanQuery)}&page[size]=10`, { headers: this.headers });
       return res.data.data;
     }
 
     // 3. Si la query parece un teléfono (+ seguido de números o mínimo 6 números)
     if (/^[+\d\s]+$/.test(cleanQuery) && cleanQuery.replace(/\s+/g, '').length >= 6) {
       const phone = encodeURIComponent(cleanQuery.replace(/\s+/g, ''));
-      const res = await axios.get(`${this.baseUrl}/candidates?filter[phone]=${phone}`, { headers: this.headers });
+      const res = await axios.get(`${this.baseUrl}/candidates?filter[phone]=${phone}&page[size]=10`, { headers: this.headers });
       return res.data.data;
     }
 
     // 4. "Out of the box": Filtro de Nombre en Memoria con Caché (1 minuto)
-    // Ya que TT no soporta buscar por nombre en la v1 nativamente.
+    // Teamtailor max page size is 30. We fetch 7 pages (210 candidates) in parallel.
     const now = Date.now();
     if (!this.cachedCandidates || (now - this.cacheTimestamp > 60000)) {
-      this.logger.log('Fetching latest 100 candidates for in-memory name search cache...');
-      const res = await axios.get(`${this.baseUrl}/candidates?page[size]=100&sort=-created-at`, { headers: this.headers });
-      this.cachedCandidates = res.data.data || [];
+      this.logger.log('Fetching latest ~210 candidates for in-memory name search cache...');
+      
+      const pageRequests = Array.from({ length: 7 }, (_, i) => 
+        axios.get(`${this.baseUrl}/candidates?page[size]=30&page[number]=${i + 1}&sort=-created-at`, { headers: this.headers })
+      );
+
+      const responses = await Promise.allSettled(pageRequests);
+      let allCandidates: any[] = [];
+      
+      for (const res of responses) {
+        if (res.status === 'fulfilled') {
+          allCandidates = allCandidates.concat(res.value.data.data || []);
+        } else {
+          this.logger.warn(`TT Pagination request failed: ${res.reason.message}`);
+        }
+      }
+
+      this.cachedCandidates = allCandidates;
       this.cacheTimestamp = now;
     }
 
