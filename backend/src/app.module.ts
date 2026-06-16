@@ -9,6 +9,8 @@ import { Education } from './entities/education.entity';
 import { Template } from './entities/template.entity';
 import { User } from './entities/user.entity';
 import { AuthModule } from './auth/auth.module';
+import { ParserModule } from './parser/parser.module';
+import { CandidatesModule } from './candidates/candidates.module';
 
 @Module({
   imports: [
@@ -28,6 +30,8 @@ import { AuthModule } from './auth/auth.module';
     }),
     TypeOrmModule.forFeature([Candidate, Experience, Education, Template, User]),
     AuthModule,
+    ParserModule,
+    CandidatesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
