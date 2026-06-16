@@ -136,6 +136,28 @@ a:hover {
   box-shadow: 0 8px 24px rgba(0,0,0,0.4);
 }
 
+.btn-secondary {
+  background-color: transparent;
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-family: var(--font-heading);
+  font-weight: 500;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn-secondary:hover {
+  background-color: var(--bg-hover);
+  border-color: var(--text-muted);
+}
+
 .input-field {
   background-color: var(--bg-dark);
   border: 1px solid var(--border-color);
@@ -152,6 +174,36 @@ a:hover {
 .input-field:focus {
   border-color: var(--konexa-green);
   box-shadow: 0 0 0 3px var(--konexa-green-glow);
+}
+
+/* React Quill Dark Mode */
+.ql-toolbar.ql-snow {
+  border: 1px solid var(--border-color) !important;
+  background-color: var(--bg-card);
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+}
+.ql-container.ql-snow {
+  border: 1px solid var(--border-color) !important;
+  border-bottom-left-radius: 8px;
+  border-bottom-right-radius: 8px;
+  background-color: var(--bg-dark);
+  color: var(--text-main);
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  min-height: 120px;
+}
+.ql-snow .ql-stroke {
+  stroke: var(--text-muted) !important;
+}
+.ql-snow .ql-fill {
+  fill: var(--text-muted) !important;
+}
+.ql-snow .ql-picker {
+  color: var(--text-muted) !important;
+}
+.ql-editor {
+  min-height: 120px;
 }
 
 /* Animations */
