@@ -12,5 +12,6 @@ import { CandidatesModule } from '../candidates/candidates.module';
   ],
   controllers: [ParserController],
   providers: [ParserService, OpenAIService, ConverterService],
+  exports: [ParserService],
 })
 export class ParserModule {}
