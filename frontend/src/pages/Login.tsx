@@ -10,7 +10,8 @@ export function Login() {
 
   const handleMicrosoftLogin = () => {
     // Redirect to the backend OAuth2 endpoint
-    window.location.href = 'http://localhost:3001/api/auth/microsoft';
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+    window.location.href = `${apiUrl}/auth/microsoft`;
   };
 
   return (

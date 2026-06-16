@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Create an Axios instance configured to point to the NestJS backend
 const api = axios.create({
-  baseURL: 'http://localhost:3001/api',
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3001/api',
 });
 
 // Request interceptor to automatically attach the JWT token if it exists

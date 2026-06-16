@@ -21,6 +21,7 @@ export class AuthController {
     // Redirect to frontend with token in URL (or use a secure cookie in production)
     // Here we redirect back to the frontend domain with the token
     // The frontend can parse it from the URL and save it in localStorage
-    res.redirect(`http://localhost:5173/auth/callback?token=${access_token}`);
+    const frontendUrl = process.env.FRONTEND_URL || `http://localhost:${process.env.FRONTEND_PORT || 5173}`;
+    res.redirect(`${frontendUrl}/auth/callback?token=${access_token}`);
   }
 }

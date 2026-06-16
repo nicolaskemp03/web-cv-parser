@@ -12,8 +12,10 @@ async function bootstrap() {
   app.use(helmet());
   app.use(compression());
 
+  const frontendUrl = process.env.FRONTEND_URL || `http://localhost:${process.env.FRONTEND_PORT || 5173}`;
+
   app.enableCors({
-    origin: 'http://localhost:5173',
+    origin: frontendUrl,
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,
   });
