@@ -66,10 +66,10 @@ export class TeamtailorService {
       return res.data.data;
     }
 
-    // 4. "Out of the box": Filtro de Nombre en Memoria con Caché (1 minuto)
+    // 4. "Out of the box": Filtro de Nombre en Memoria con Caché (5 minutos)
     // Teamtailor max page size is 30. We fetch 7 pages (210 candidates) in parallel.
     const now = Date.now();
-    if (!this.cachedCandidates || (now - this.cacheTimestamp > 60000)) {
+    if (!this.cachedCandidates || (now - this.cacheTimestamp > 300000)) {
       this.logger.log('Fetching latest ~210 candidates for in-memory name search cache...');
       
       const pageRequests = Array.from({ length: 7 }, (_, i) => 
