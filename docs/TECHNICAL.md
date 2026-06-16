@@ -20,6 +20,10 @@ Se requiere un archivo `.env` en la raíz del backend con los siguientes paráme
 PORT=3001
 FRONTEND_PORT=5173
 
+# URLs de Producción (Obligatorios en la nube)
+# FRONTEND_URL indica a NestJS qué dominio debe aceptar en los permisos CORS y hacia dónde redirigir tras el Login.
+FRONTEND_URL=https://cv.tudominio.com
+
 # Fundamental para asegurar que PostgreSQL y NodeJS sincronicen correctamente fechas/horas
 TZ=UTC
 
@@ -38,6 +42,13 @@ OPENAI_API_KEY=sk-proj-...
 TEAMTAILOR_API_TOKEN=Bearer tu_token_aqui
 ```
 
+## Variables de Entorno del Frontend (`frontend/.env`)
+El frontend necesita saber la URL pública del backend para realizar las peticiones HTTP. Esta variable se inyecta en tiempo de compilación. Debes crear un archivo `.env` dentro de la carpeta `frontend/`:
+
+```env
+VITE_API_URL=https://api.tudominio.com/api
+```
+
 ## Despliegue en Producción
 El sistema está configurado para correr usando **PM2** y **Traefik** como proxy reverso para la capa SSL/TLS.
 
@@ -45,8 +56,9 @@ El sistema está configurado para correr usando **PM2** y **Traefik** como proxy
 1. Descarga el repositorio al servidor.
 2. Ejecuta `npm run install:all` para instalar automáticamente las dependencias raíz, de backend y de frontend.
 3. Configura tu archivo `.env` en la raíz (usando `.env.example` como base).
-4. Ejecuta `npm run build:all` en la raíz (Compila Backend y Frontend).
-5. Ejecuta `pm2 start ecosystem.config.js --env production` (Arranca ambos servicios mediante PM2).
+4. Configura tu archivo `.env` dentro de `frontend/` (usando `frontend/.env.example` como base).
+5. Ejecuta `npm run build:all` en la raíz (Compila Backend y Frontend).
+6. Ejecuta `pm2 start ecosystem.config.js --env production` (Arranca ambos servicios mediante PM2).
 
 ### Rotación de Logs
 Se recomienda instalar `pm2-logrotate` en el servidor host:
