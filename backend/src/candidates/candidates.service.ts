@@ -10,14 +10,43 @@ import { Template } from '../entities/template.entity';
 export class CandidatesService {
   private readonly logger = new Logger(CandidatesService.name);
 
-  // Limpiador para convertir el HTML de ReactQuill al formato que espera la plantilla PDF
-  private cleanQuillHtml(html: string): string {
+  // Limpiador para convertir el HTML de ReactQuill al formato que espera la plantilla PDF.
+  // ReactQuill inyecta &amp;nbsp; en lugar de espacios normales, etiquetas <p>, clases CSS
+  // y estructuras <ol>/<ul> que rompen el layout de la plantilla Handlebars del PDF.
+  cleanQuillHtml(html: string): string {
     if (!html) return html;
-    return html
-      .replace(/<\/p>\s*<p>/gi, '<br><br>') // Convertir saltos de párrafo en <br>
-      .replace(/<\/?p[^>]*>/gi, '')         // Eliminar etiquetas <p> restantes
-      .replace(/class="[^"]*"/gi, '')       // Eliminar clases inyectadas por Quill (ej. ql-align-justify)
-      .trim();
+    let clean = html;
+
+    // 1. CRÍTICO: Reemplazar &nbsp; con espacios normales.
+    //    ReactQuill convierte TODOS los espacios a &nbsp; lo que impide
+    //    el word-wrap del CSS y causa que el texto desborde el contenedor.
+    clean = clean.replace(/&nbsp;/gi, ' ');
+
+    // 2. Convertir listas de Quill (<ol>/<ul> con <li>) a texto con viñetas y <br>
+    clean = clean.replace(/<li[^>]*>/gi, '● ');
+    clean = clean.replace(/<\/li>/gi, '<br>');
+    clean = clean.replace(/<\/?[ou]l[^>]*>/gi, '');
+
+    // 3. Convertir saltos de párrafo </p><p> en <br>
+    clean = clean.replace(/<\/p>\s*<p[^>]*>/gi, '<br>');
+
+    // 4. Eliminar etiquetas <p> restantes (apertura y cierre)
+    clean = clean.replace(/<\/?p[^>]*>/gi, '');
+
+    // 5. Eliminar atributos class="" inyectados por Quill (ej. ql-align-justify)
+    clean = clean.replace(/ class="[^"]*"/gi, '');
+
+    // 6. Eliminar atributos style="" vacíos o de Quill
+    clean = clean.replace(/ style="[^"]*"/gi, '');
+
+    // 7. Colapsar <br> consecutivos excesivos (max 2)
+    clean = clean.replace(/(<br\s*\/?>){3,}/gi, '<br><br>');
+
+    // 8. Eliminar <br> al inicio y al final
+    clean = clean.replace(/^(<br\s*\/?>)+/gi, '');
+    clean = clean.replace(/(<br\s*\/?>)+$/gi, '');
+
+    return clean.trim();
   }
 
   constructor(
