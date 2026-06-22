@@ -99,22 +99,20 @@ export class CandidatesService {
 
   async update(id: string, updateData: Partial<any>): Promise<Candidate> {
     const candidate = await this.findOne(id);
+    this.logger.log(`Updating candidate ${id} with data keys: ${Object.keys(updateData).join(', ')}`);
 
-    // Update basic fields
-    if (updateData.bio) {
-      const bio = updateData.bio;
-      candidate.nombres = bio.nombres ?? candidate.nombres;
-      candidate.apellidos = bio.apellidos ?? candidate.apellidos;
-      candidate.rut = bio.rut ?? candidate.rut;
-      candidate.ubicacion = bio.ubicacion ?? candidate.ubicacion;
-      candidate.mail = bio.mail ?? candidate.mail;
-      candidate.numero = bio.numero ?? candidate.numero;
-      candidate.profesion = bio.profesion ?? candidate.profesion;
-      candidate.resumen = bio.resumen ?? candidate.resumen;
-    }
+    // El frontend envía la estructura aplanada de la entidad
+    candidate.nombres = updateData.nombres ?? candidate.nombres;
+    candidate.apellidos = updateData.apellidos ?? candidate.apellidos;
+    candidate.rut = updateData.rut ?? candidate.rut;
+    candidate.ubicacion = updateData.ubicacion ?? candidate.ubicacion;
+    candidate.mail = updateData.mail ?? candidate.mail;
+    candidate.numero = updateData.numero ?? candidate.numero;
+    candidate.profesion = updateData.profesion ?? candidate.profesion;
+    candidate.resumen = updateData.resumen ?? candidate.resumen;
 
-    if (updateData.stack_tecnologico) {
-      candidate.stack = updateData.stack_tecnologico;
+    if (updateData.stack) {
+      candidate.stack = updateData.stack;
     }
 
     if (updateData.idiomas) {
@@ -123,10 +121,10 @@ export class CandidatesService {
 
     await this.candidateRepo.save(candidate);
 
-    // Replace experiences if provided
-    if (updateData.experiencias && Array.isArray(updateData.experiencias)) {
+    // Reemplazar experiencias si vienen en el payload (flattened key 'experiences')
+    if (updateData.experiences && Array.isArray(updateData.experiences)) {
       await this.experienceRepo.delete({ candidate: { id } });
-      const experiences = updateData.experiencias.map((exp: any, index: number) =>
+      const experiences = updateData.experiences.map((exp: any, index: number) =>
         this.experienceRepo.create({
           candidate: { id } as any,
           puesto: exp.puesto || null,
@@ -140,10 +138,10 @@ export class CandidatesService {
       await this.experienceRepo.save(experiences);
     }
 
-    // Replace education if provided
-    if (updateData.formacion && Array.isArray(updateData.formacion)) {
+    // Reemplazar educación si viene en el payload (flattened key 'education')
+    if (updateData.education && Array.isArray(updateData.education)) {
       await this.educationRepo.delete({ candidate: { id } });
-      const education = updateData.formacion.map((edu: any, index: number) =>
+      const education = updateData.education.map((edu: any, index: number) =>
         this.educationRepo.create({
           candidate: { id } as any,
           titulo: edu.titulo || null,
@@ -155,6 +153,7 @@ export class CandidatesService {
       await this.educationRepo.save(education);
     }
 
+    this.logger.log(`Candidate ${id} updated successfully`);
     return this.findOne(id);
   }
 
