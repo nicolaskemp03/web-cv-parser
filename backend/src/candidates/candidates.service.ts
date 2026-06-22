@@ -10,6 +10,16 @@ import { Template } from '../entities/template.entity';
 export class CandidatesService {
   private readonly logger = new Logger(CandidatesService.name);
 
+  // Limpiador para convertir el HTML de ReactQuill al formato que espera la plantilla PDF
+  private cleanQuillHtml(html: string): string {
+    if (!html) return html;
+    return html
+      .replace(/<\/p>\s*<p>/gi, '<br><br>') // Convertir saltos de párrafo en <br>
+      .replace(/<\/?p[^>]*>/gi, '')         // Eliminar etiquetas <p> restantes
+      .replace(/class="[^"]*"/gi, '')       // Eliminar clases inyectadas por Quill (ej. ql-align-justify)
+      .trim();
+  }
+
   constructor(
     @InjectRepository(Candidate)
     private candidateRepo: Repository<Candidate>,
@@ -109,7 +119,7 @@ export class CandidatesService {
     candidate.mail = updateData.mail ?? candidate.mail;
     candidate.numero = updateData.numero ?? candidate.numero;
     candidate.profesion = updateData.profesion ?? candidate.profesion;
-    candidate.resumen = updateData.resumen ?? candidate.resumen;
+    candidate.resumen = updateData.resumen ? this.cleanQuillHtml(updateData.resumen) : candidate.resumen;
 
     if (updateData.stack) {
       candidate.stack = updateData.stack;
@@ -127,11 +137,11 @@ export class CandidatesService {
       const experiences = updateData.experiences.map((exp: any, index: number) =>
         this.experienceRepo.create({
           candidate: { id } as any,
-          puesto: exp.puesto || null,
-          empresa: exp.empresa || null,
-          inicio: exp.inicio || null,
-          termino: exp.termino || null,
-          descripcion: exp.descripcion || null,
+          puesto: exp.puesto || undefined,
+          empresa: exp.empresa || undefined,
+          inicio: exp.inicio || undefined,
+          termino: exp.termino || undefined,
+          descripcion: exp.descripcion ? this.cleanQuillHtml(exp.descripcion) : undefined,
           orden: index,
         }),
       );
@@ -144,9 +154,9 @@ export class CandidatesService {
       const education = updateData.education.map((edu: any, index: number) =>
         this.educationRepo.create({
           candidate: { id } as any,
-          titulo: edu.titulo || null,
-          institucion: edu.institucion || null,
-          anio: edu.anio || null,
+          titulo: edu.titulo || undefined,
+          institucion: edu.institucion || undefined,
+          anio: edu.anio || undefined,
           orden: index,
         }),
       );

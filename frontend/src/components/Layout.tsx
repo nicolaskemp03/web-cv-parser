@@ -83,6 +83,9 @@ export function Layout() {
             <LogOut size={20} />
             <span style={{ fontFamily: 'var(--font-body)', fontSize: '1rem' }}>Cerrar sesión</span>
           </button>
+          <div style={{ marginTop: '15px', textAlign: 'center', fontSize: '0.8rem', color: 'var(--text-muted)', opacity: 0.5 }}>
+            v1.0.2
+          </div>
         </div>
       </aside>
 
